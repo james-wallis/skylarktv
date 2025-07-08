@@ -48,8 +48,8 @@ const defaultAppConfig: {
     accent: "#ff385c",
   },
   showBySkylark: true,
-  withIntercom: true,
-  withSegment: true,
+  withIntercom: false,
+  withSegment: false,
   hideDimensionsSettings: false,
   dimensions: {
     [DimensionKey.CustomerType]: {

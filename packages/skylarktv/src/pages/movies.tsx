@@ -22,6 +22,8 @@ const GenrePage = ({ genreFromUrl }: { genreFromUrl: string | null }) => {
   const unfilteredMovies = useListObjects<Movie>(LIST_MOVIES);
   const filteredMoviesByGenre = useMovieListingFromGenre(activeGenreUid);
 
+  console.log({ unfilteredMovies, filteredMoviesByGenre });
+
   const {
     movies,
     isError: isMovieError,
@@ -29,6 +31,8 @@ const GenrePage = ({ genreFromUrl }: { genreFromUrl: string | null }) => {
   } = activeGenreUid
     ? filteredMoviesByGenre
     : { ...unfilteredMovies, movies: unfilteredMovies.objects };
+
+  console.log({ movies, isMovieError });
 
   if (!isLoading && isMovieError) {
     return (

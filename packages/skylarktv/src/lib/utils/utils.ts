@@ -180,7 +180,7 @@ export const splitAndFormatGraphQLCreditsByInternalTitle = (
 
       const role =
         (credit?.roles?.objects &&
-          credit.roles.objects.length === 0 &&
+          credit.roles.objects.length > 0 &&
           hasProperty(credit.roles.objects[0], "internal_title") &&
           credit.roles.objects[0].internal_title) ||
         "_default";
