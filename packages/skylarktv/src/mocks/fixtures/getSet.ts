@@ -131,45 +131,10 @@ export const getSetHandlers = [
       });
     }
     
-    const contentIds = getSetContent(actualSet);
-    console.log(`GET_PAGE_SET: Found PAGE set "${actualSet.fields.title}" with ${contentIds.length} content items`);
+    console.log(`GET_PAGE_SET: Found PAGE set "${actualSet.fields.title}"`);
     
-    // Check if this set has dynamic content
-    const isDynamic = !!actualSet.fields.dynamic_content;
-    
-    // Get the content objects from the set - these should be references to other sets (rails)
-    const contentObjects = contentIds
-      .map((contentId: string, index: number) => {
-        let contentObj = null;
-        
-        // Check if this content ID refers to a set reference in mediaObjects
-        const setReference = airtableData.mediaObjects.find(obj => obj.id === contentId);
-        
-        if (setReference && setReference.fields.skylark_object_type === "SkylarkSet") {
-          // This is a set reference, resolve it to the actual set
-          const referencedSet = resolveSetReference(contentId);
-          if (referencedSet) {
-            contentObj = convertSetToGraphQL(referencedSet);
-          }
-        } else {
-          // Otherwise try to find it directly as a media object
-          const mediaObj = airtableData.mediaObjects.find(obj => obj.id === contentId);
-          contentObj = mediaObj ? convertMediaObjectToGraphQL(mediaObj) : null;
-        }
-        
-        if (!contentObj) return null;
-        
-        return {
-          __typename: "SetContent",
-          dynamic: false,
-          object: contentObj,
-          position: index + 1,
-        };
-      })
-      .filter(Boolean);
-    
+    // Use convertSetToGraphQL with depth limiting
     const setGraphQL = convertSetToGraphQL(actualSet);
-    setGraphQL.content.objects = contentObjects;
     
     return HttpResponse.json({
       data: {
