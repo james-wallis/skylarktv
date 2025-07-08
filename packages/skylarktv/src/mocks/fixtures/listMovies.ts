@@ -49,6 +49,7 @@ export const listMoviesHandlers = [
     return HttpResponse.json({
       data: {
         getObject: {
+          __typename: "Genre",
           uid: genre.id,
           name: genre.fields.name,
           movies: {
@@ -83,6 +84,7 @@ export const listMoviesHandlers = [
     return HttpResponse.json({
       data: {
         getObject: {
+          __typename: "SkylarkTag",
           uid: tag.id,
           name: tag.fields.name,
           movies: {

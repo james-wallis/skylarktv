@@ -8,10 +8,28 @@ import {
   convertMediaObjectToGraphQL,
   isObjectType,
   getObjectsByType,
+  getSetContent,
 } from "../airtableData";
 
 export const getSetHandlers = [
   graphql.link(SAAS_API_ENDPOINT).query("GET_SET", ({ variables }) => {
+    const setId = variables.uid || variables.externalId;
+    const set = getSetById(setId);
+    
+    if (set) {
+      return HttpResponse.json({
+        data: {
+          getObject: convertSetToGraphQL(set),
+        },
+      });
+    }
+
+    return HttpResponse.json({
+      data: { getObject: null },
+    });
+  }),
+
+  graphql.link(SAAS_API_ENDPOINT).query("GET_SET_THUMBNAIL", ({ variables }) => {
     const setId = variables.uid || variables.externalId;
     const set = getSetById(setId);
     
@@ -47,27 +65,11 @@ export const getSetHandlers = [
       });
     }
     
-    console.log(`GET_SET_FOR_CAROUSEL: Found set "${actualSet.fields.title}" with ${actualSet.fields.content?.length || 0} content items`);
-    
-    // Get the content objects from the set
-    const contentObjects = (actualSet.fields.content || [])
-      .map((contentId: string) => {
-        // Find the content in mediaObjects
-        const mediaObj = airtableData.mediaObjects.find(obj => obj.id === contentId);
-        return mediaObj ? convertMediaObjectToGraphQL(mediaObj) : null;
-      })
-      .filter(Boolean);
+    console.log(`GET_SET_FOR_CAROUSEL: Found set "${actualSet.fields.title}"`);
     
     return HttpResponse.json({
       data: {
-        getObject: {
-          uid: actualSet.id,
-          external_id: actualSet.fields.external_id || actualSet.id,
-          title: actualSet.fields.title,
-          content: {
-            objects: contentObjects,
-          },
-        },
+        getObject: convertSetToGraphQL(actualSet),
       },
     });
   }),
@@ -92,27 +94,11 @@ export const getSetHandlers = [
       });
     }
     
-    console.log(`GET_SET_FOR_RAIL: Found set "${actualSet.fields.title}" with ${actualSet.fields.content?.length || 0} content items`);
-    
-    // Get the content objects from the set
-    const contentObjects = (actualSet.fields.content || [])
-      .map((contentId: string) => {
-        // Find the content in mediaObjects
-        const mediaObj = airtableData.mediaObjects.find(obj => obj.id === contentId);
-        return mediaObj ? convertMediaObjectToGraphQL(mediaObj) : null;
-      })
-      .filter(Boolean);
+    console.log(`GET_SET_FOR_RAIL: Found set "${actualSet.fields.title}"`);
     
     return HttpResponse.json({
       data: {
-        getObject: {
-          uid: actualSet.id,
-          external_id: actualSet.fields.external_id || actualSet.id,
-          title: actualSet.fields.title,
-          content: {
-            objects: contentObjects,
-          },
-        },
+        getObject: convertSetToGraphQL(actualSet),
       },
     });
   }),
@@ -145,11 +131,17 @@ export const getSetHandlers = [
       });
     }
     
-    console.log(`GET_PAGE_SET: Found PAGE set "${actualSet.fields.title}" with ${actualSet.fields.content?.length || 0} content items`);
+    const contentIds = getSetContent(actualSet);
+    console.log(`GET_PAGE_SET: Found PAGE set "${actualSet.fields.title}" with ${contentIds.length} content items`);
+    
+    // Check if this set has dynamic content
+    const isDynamic = !!actualSet.fields.dynamic_content;
     
     // Get the content objects from the set - these should be references to other sets (rails)
-    const contentObjects = (actualSet.fields.content || [])
-      .map((contentId: string) => {
+    const contentObjects = contentIds
+      .map((contentId: string, index: number) => {
+        let contentObj = null;
+        
         // Check if this content ID refers to a set reference in mediaObjects
         const setReference = airtableData.mediaObjects.find(obj => obj.id === contentId);
         
@@ -157,72 +149,60 @@ export const getSetHandlers = [
           // This is a set reference, resolve it to the actual set
           const referencedSet = resolveSetReference(contentId);
           if (referencedSet) {
-            return {
-              uid: referencedSet.id,
-              external_id: referencedSet.fields.external_id || referencedSet.id,
-              title: referencedSet.fields.title,
-              set_type: referencedSet.fields.set_type,
-            };
+            contentObj = convertSetToGraphQL(referencedSet);
           }
+        } else {
+          // Otherwise try to find it directly as a media object
+          const mediaObj = airtableData.mediaObjects.find(obj => obj.id === contentId);
+          contentObj = mediaObj ? convertMediaObjectToGraphQL(mediaObj) : null;
         }
         
-        // Otherwise try to find it directly as a media object
-        const mediaObj = airtableData.mediaObjects.find(obj => obj.id === contentId);
-        return mediaObj ? convertMediaObjectToGraphQL(mediaObj) : null;
+        if (!contentObj) return null;
+        
+        return {
+          __typename: "SetContent",
+          dynamic: false,
+          object: contentObj,
+          position: index + 1,
+        };
       })
       .filter(Boolean);
     
+    const setGraphQL = convertSetToGraphQL(actualSet);
+    setGraphQL.content.objects = contentObjects;
+    
     return HttpResponse.json({
       data: {
-        getObject: {
-          uid: actualSet.id,
-          external_id: actualSet.fields.external_id || actualSet.id,
-          title: actualSet.fields.title,
-          set_type: actualSet.fields.set_type,
-          content: {
-            objects: contentObjects,
-          },
-        },
+        getObject: setGraphQL,
       },
     });
   }),
 
   graphql.link(SAAS_API_ENDPOINT).query("GET_COLLECTION_SET", ({ variables }) => {
     const setId = variables.uid || variables.externalId;
+    console.log(`GET_COLLECTION_SET: Looking for collection set with ID: ${setId}`);
     
     // First try to find the set directly in the sets array
     let actualSet = getSetById(setId);
     
     // If not found, try the reference resolution (mediaObjects -> sets mapping)
     if (!actualSet) {
+      console.log(`GET_COLLECTION_SET: Direct set lookup failed, trying reference resolution`);
       actualSet = resolveSetReference(setId);
     }
     
     if (!actualSet) {
+      console.log(`GET_COLLECTION_SET: Set not found for ID: ${setId}`);
       return HttpResponse.json({
         data: { getObject: null },
       });
     }
     
-    // Get the content objects from the set
-    const contentObjects = (actualSet.fields.content || [])
-      .map((contentId: string) => {
-        // Find the content in mediaObjects
-        const mediaObj = airtableData.mediaObjects.find(obj => obj.id === contentId);
-        return mediaObj ? convertMediaObjectToGraphQL(mediaObj) : null;
-      })
-      .filter(Boolean);
+    console.log(`GET_COLLECTION_SET: Found set "${actualSet.fields.internal_title || actualSet.fields.title}"`);
     
     return HttpResponse.json({
       data: {
-        getObject: {
-          uid: actualSet.id,
-          external_id: actualSet.fields.external_id || actualSet.id,
-          title: actualSet.fields.title,
-          content: {
-            objects: contentObjects,
-          },
-        },
+        getObject: convertSetToGraphQL(actualSet),
       },
     });
   }),

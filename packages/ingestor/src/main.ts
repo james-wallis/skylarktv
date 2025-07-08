@@ -183,6 +183,33 @@ const main = async () => {
     !skylarktvSetupOnly && process.env.CREATE_SETS === "true";
   const shouldCreateAdditionalSLXDemoObjects =
     !skylarktvSetupOnly && process.env.CREATE_SLX_DEMO_SETS === "true";
+  const airtableExportOnly = process.env.AIRTABLE_EXPORT_ONLY === "true";
+
+  // eslint-disable-next-line no-console
+  const airtable = await getAllTables();
+
+  if (airtableExportOnly) {
+    // eslint-disable-next-line no-console
+    console.log("Airtable export only mode - writing data to file");
+
+    const dateStamp = new Date().toISOString();
+    const output = {
+      environment_meta: {
+        date_stamp: dateStamp,
+        endpoint: "airtable-export",
+      },
+      airtable_data: airtable,
+    };
+
+    await writeAirtableOutputFile(dateStamp, output);
+
+    // eslint-disable-next-line no-console
+    console.timeEnd(timers.full);
+    // eslint-disable-next-line no-console
+    console.log("Airtable data exported successfully");
+    return;
+  }
+
   if (skylarktvSetupOnly)
     // eslint-disable-next-line no-console
     console.log(
@@ -206,9 +233,6 @@ const main = async () => {
       "CREATE_ONLY mode enabled, minimal object updates only (partially supported)",
     );
   }
-
-  // eslint-disable-next-line no-console
-  const airtable = await getAllTables();
 
   // eslint-disable-next-line no-console
   console.log(`Starting ingest to Skylark X: ${SAAS_API_ENDPOINT}`);

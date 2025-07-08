@@ -7,6 +7,7 @@ export const getUserAccountHandlers = [
     return HttpResponse.json({
       data: {
         getUser: {
+          __typename: "User",
           account: "mock-user",
           role: "user",
           permissions: ["read"],
@@ -19,12 +20,14 @@ export const getUserAccountHandlers = [
     HttpResponse.json({
       data: {
         getAccount: {
+          __typename: "Account",
           uid: "mock-account",
           name: "Mock Account",
           status: "ACTIVE",
           users: {
             objects: [
               {
+                __typename: "User",
                 uid: "mock-user",
                 first_name: "Mock",
                 last_name: "User",

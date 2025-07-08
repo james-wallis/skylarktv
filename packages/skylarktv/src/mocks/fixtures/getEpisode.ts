@@ -9,6 +9,45 @@ import {
 } from "../airtableData";
 
 export const getEpisodeHandlers = [
+  graphql.link(SAAS_API_ENDPOINT).query("GET_EPISODE", ({ variables }) => {
+    const airtableObj = getMediaObjectByUidOrExternalId(variables.uid, variables.externalId);
+    const episode = airtableObj && isObjectType(airtableObj, 'episode')
+      ? convertMediaObjectToGraphQL(airtableObj) 
+      : null;
+
+    return HttpResponse.json({
+      data: {
+        getObject: episode,
+      },
+    });
+  }),
+
+  graphql.link(SAAS_API_ENDPOINT).query("GET_EPISODE_THUMBNAIL", ({ variables }) => {
+    const airtableObj = getMediaObjectByUidOrExternalId(variables.uid, variables.externalId);
+    const episode = airtableObj && isObjectType(airtableObj, 'episode')
+      ? convertMediaObjectToGraphQL(airtableObj)
+      : null;
+
+    return HttpResponse.json({
+      data: {
+        getObject: episode,
+      },
+    });
+  }),
+
+  graphql.link(SAAS_API_ENDPOINT).query("GET_EPISODE_THUMBNAIL_WITH_ADDITIONAL_RELATIONSHIPS", ({ variables }) => {
+    const airtableObj = getMediaObjectByUidOrExternalId(variables.uid, variables.externalId);
+    const episode = airtableObj && isObjectType(airtableObj, 'episode')
+      ? convertMediaObjectToGraphQL(airtableObj)
+      : null;
+
+    return HttpResponse.json({
+      data: {
+        getObject: episode,
+      },
+    });
+  }),
+
   graphql.link(SAAS_API_ENDPOINT).query("LIST_EPISODES", ({ variables }) => {
     const episodes = getObjectsByType("episodes");
     const limit = variables?.limit || 20;
@@ -47,6 +86,7 @@ export const getEpisodeHandlers = [
     return HttpResponse.json({
       data: {
         getObject: {
+          __typename: "Genre",
           uid: genre.id,
           name: genre.fields.name,
           episodes: {
@@ -80,6 +120,7 @@ export const getEpisodeHandlers = [
     return HttpResponse.json({
       data: {
         getObject: {
+          __typename: "SkylarkTag",
           uid: tag.id,
           name: tag.fields.name,
           episodes: {

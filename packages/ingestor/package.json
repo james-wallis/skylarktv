@@ -36,6 +36,7 @@
     "ingest": "ts-node src/main.ts",
     "ingest:saas": "cross-env yarn ingest",
     "ingest:saas:with-sets": "cross-env CREATE_SETS=true yarn ingest",
+    "ingest:airtable-export": "cross-env AIRTABLE_EXPORT_ONLY=true yarn ingest",
     "test": "jest --config=jest.config.js",
     "lint": "eslint -c .eslintrc.js .",
     "ingest:legacy-to-skylark": "ts-node src/lib/ingestLegacyObjectsToSkylark/main.ts",

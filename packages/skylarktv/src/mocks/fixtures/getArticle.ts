@@ -33,6 +33,7 @@ export const getArticleHandlers = [
         }
         
         return {
+          __typename: "SkylarkImage",
           uid: img.id,
           title: img.fields.title || img.fields["unique-title"],
           type: type || "IMAGE",
@@ -139,6 +140,7 @@ export const getArticleHandlers = [
         }
         
         return {
+          __typename: "SkylarkImage",
           uid: img.id,
           title: img.fields.title || img.fields["unique-title"],
           type: type || "IMAGE",

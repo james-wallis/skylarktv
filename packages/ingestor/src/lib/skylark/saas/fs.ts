@@ -16,7 +16,7 @@ export const writeAirtableOutputFile = async (
   output: object,
 ) => {
   await ensureDir("./outputs/airtable");
-  await writeJSON(`./outputs/airtable/${dateStamp}.json`, output);
+  await writeJSON(`./outputs/airtable/${dateStamp}.json`, output, { spaces: 2 });
 };
 
 const writeGraphQLBaseObjectsToDisk = async (

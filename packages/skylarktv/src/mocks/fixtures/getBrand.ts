@@ -45,6 +45,7 @@ export const getBrandHandlers = [
               );
             })
             .map(ep => ({
+              __typename: "Episode",
               uid: ep.id,
               slug: ep.fields.slug,
               episode_number: ep.fields.episode_number,

@@ -14,6 +14,8 @@
     "prestorybook": "ONLY_GENERATE_CSS_FILE=true yarn codegen",
     "prebuild-storybook": "ONLY_GENERATE_CSS_FILE=true yarn codegen",
     "ingest": "cd ../../packages/ingestor && yarn ingest:saas:with-sets",
+    "mock-data:update": "cp ../ingestor/outputs/airtable/$(ls -t ../ingestor/outputs/airtable/*.json | head -1 | xargs basename) ./src/mocks/skylark_airtable_data.json && echo \"Updated to latest Airtable data: $(ls -t ../ingestor/outputs/airtable/*.json | head -1 | xargs basename)\"",
+    "mock-data:fetch": "cd ../ingestor && yarn ingest:airtable-export && cd ../skylarktv && yarn mock-data:update",
     "vercel:link": "vercel link -p skylarktv --scope skylark-platform --yes",
     "vercel:env": "vercel env pull .env.local --yes",
     "storybook": "storybook dev -p 6006",

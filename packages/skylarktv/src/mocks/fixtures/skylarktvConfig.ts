@@ -25,11 +25,19 @@ const createHomepageSet = () => {
   const episodes = getObjectsByType("episodes").slice(0, 10);
   const brands = getObjectsByType("brands").slice(0, 5);
 
+  const allContent = [...movies, ...episodes, ...brands];
+  
   return {
+    __typename: "SkylarkSet",
     uid: "homepage-set",
     title: "Homepage",
     content: {
-      objects: [...movies, ...episodes, ...brands],
+      objects: allContent.map((obj, index) => ({
+        __typename: "SetContent",
+        dynamic: false,
+        object: obj,
+        position: index + 1,
+      })),
     },
   };
 };
