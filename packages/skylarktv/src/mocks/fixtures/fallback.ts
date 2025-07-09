@@ -8,7 +8,7 @@ export const fallbackHandlers = [
       url: request.url,
       variables: request.body,
     });
-    
+
     return HttpResponse.json({
       data: {},
       errors: [

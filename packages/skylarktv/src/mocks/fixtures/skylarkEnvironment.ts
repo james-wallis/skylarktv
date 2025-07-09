@@ -14,6 +14,6 @@ export const skylarkEnvironmentHandlers = [
   graphql.link(SAAS_API_ENDPOINT).query("GET_SKYLARK_ENVIRONMENT", () =>
     HttpResponse.json({
       data: mockSkylarkEnvironment,
-    })
+    }),
   ),
 ];

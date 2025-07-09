@@ -5,12 +5,16 @@ import {
   getMediaObjectByUidOrExternalId,
   convertMediaObjectToGraphQL,
   isObjectType,
+  assertNumber,
+  assertStringArray,
 } from "../airtableData";
 
 export const getBrandHandlers = [
   graphql.link(SAAS_API_ENDPOINT).query("GET_BRAND", ({ variables }) => {
     const airtableObj = getMediaObjectByUidOrExternalId(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       variables.uid,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       variables.externalId,
     );
     const brand =
@@ -18,7 +22,7 @@ export const getBrandHandlers = [
         ? convertMediaObjectToGraphQL(airtableObj)
         : null;
 
-    if (brand) {
+    if (brand && airtableObj) {
       console.log(
         `GET_BRAND: Looking for seasons and episodes for brand ${airtableObj.id}`,
       );
@@ -31,15 +35,19 @@ export const getBrandHandlers = [
 
           // Check various ways seasons might be linked to brands
           return (
-            (obj.fields.brands && obj.fields.brands.includes(airtableObj.id)) ||
+            (obj.fields.brands &&
+              assertStringArray(obj.fields.brands)?.includes(airtableObj.id)) ||
             (obj.fields.parent &&
               Array.isArray(obj.fields.parent) &&
-              obj.fields.parent.includes(airtableObj.id)) ||
-            obj.fields.parent === airtableObj.id
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+              obj.fields.parent.includes(airtableObj!.id)) ||
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            obj.fields.parent === airtableObj!.id
           );
         })
         .map((seasonObj) => {
           const season = convertMediaObjectToGraphQL(seasonObj);
+          if (!season) return null;
 
           // Find episodes for each season using the parent field
           const episodes = airtableData.mediaObjects
@@ -50,6 +58,7 @@ export const getBrandHandlers = [
               return (
                 (obj.fields.parent &&
                   Array.isArray(obj.fields.parent) &&
+                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
                   obj.fields.parent.includes(seasonObj.id)) ||
                 obj.fields.parent === seasonObj.id
               );
@@ -58,24 +67,33 @@ export const getBrandHandlers = [
               __typename: "Episode",
               uid: ep.id,
               slug: ep.fields.slug,
-              episode_number: ep.fields.episode_number,
+              episode_number: assertNumber(ep.fields.episode_number),
             }))
-            .sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0));
-
-          console.log(
-            `GET_BRAND: Season "${seasonObj.fields.title}" has ${episodes.length} episodes`,
-          );
+            .sort((a, b) => {
+              const aNum =
+                typeof a.episode_number === "number" ? a.episode_number : 0;
+              const bNum =
+                typeof b.episode_number === "number" ? b.episode_number : 0;
+              return aNum - bNum;
+            });
 
           return {
             ...season,
             episodes: { objects: episodes },
           };
         })
-        .sort((a, b) => (b.season_number || 0) - (a.season_number || 0)); // Descending order
-
-      console.log(
-        `GET_BRAND: Brand "${brand.title}" has ${seasons.length} seasons`,
-      );
+        .filter((s): s is NonNullable<typeof s> => s !== null)
+        .sort((a, b) => {
+          const aNum =
+            "season_number" in a && typeof a.season_number === "number"
+              ? a.season_number
+              : 0;
+          const bNum =
+            "season_number" in b && typeof b.season_number === "number"
+              ? b.season_number
+              : 0;
+          return bNum - aNum;
+        }); // Descending order
 
       return HttpResponse.json({
         data: {
@@ -98,7 +116,9 @@ export const getBrandHandlers = [
     .link(SAAS_API_ENDPOINT)
     .query("GET_BRAND_THUMBNAIL", ({ variables }) => {
       const airtableObj = getMediaObjectByUidOrExternalId(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         variables.uid,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         variables.externalId,
       );
       const brand =

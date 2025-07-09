@@ -80,6 +80,7 @@
     "@types/react": "19.0.1",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
+    "airtable": "0.12.2",
     "autoprefixer": "10.4.20",
     "jest": "29.7.0",
     "jest-environment-jsdom": "29.7.0",

@@ -26,7 +26,7 @@ const createHomepageSet = () => {
   const brands = getObjectsByType("brands").slice(0, 5);
 
   const allContent = [...movies, ...episodes, ...brands];
-  
+
   return {
     __typename: "SkylarkSet",
     uid: "homepage-set",
@@ -46,12 +46,12 @@ export const skylarktvConfigHandlers = [
   graphql.link(SAAS_API_ENDPOINT).query("GET_SKYLARK_TV_CONFIG", () =>
     HttpResponse.json({
       data: mockSkylarkTVConfig,
-    })
+    }),
   ),
 
   graphql.link(SAAS_API_ENDPOINT).query("GET_APP_CONFIG", () => {
     const homepageSet = createHomepageSet();
-    
+
     return HttpResponse.json({
       data: {
         getSkylarkSet: homepageSet,
@@ -59,11 +59,11 @@ export const skylarktvConfigHandlers = [
     });
   }),
 
-  graphql.link(SAAS_API_ENDPOINT).query("GET_STREAMTV_CONFIG", () => {
-    return HttpResponse.json({
+  graphql.link(SAAS_API_ENDPOINT).query("GET_STREAMTV_CONFIG", () =>
+    HttpResponse.json({
       data: {
         getSkylarkSet: createHomepageSet(),
       },
-    });
-  }),
+    }),
+  ),
 ];

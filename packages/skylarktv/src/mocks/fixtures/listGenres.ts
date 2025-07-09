@@ -4,7 +4,7 @@ import { airtableData } from "../airtableData";
 
 export const listGenresHandlers = [
   // Handle Genre list
-  graphql.link(SAAS_API_ENDPOINT).query("LIST_GENRES", ({ variables }) => {
+  graphql.link(SAAS_API_ENDPOINT).query("LIST_GENRES", () => {
     const genres = (airtableData.genres || []).map((genre) => ({
       __typename: "Genre",
       uid: genre.id,

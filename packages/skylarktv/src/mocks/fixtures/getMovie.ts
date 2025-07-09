@@ -7,23 +7,38 @@ import {
 } from "../airtableData";
 
 export const getMovieHandlers = [
-  graphql.link(SAAS_API_ENDPOINT).query("GET_MOVIE", ({ variables }) => {
-    const airtableObj = getMediaObjectByUidOrExternalId(variables.uid, variables.externalId);
-    const movie = airtableObj && isObjectType(airtableObj, 'movie')
-      ? convertMediaObjectToGraphQL(airtableObj) 
-      : null;
+  graphql
+    .link(SAAS_API_ENDPOINT)
+    .query<
+      object,
+      { uid: string; externalId: string }
+    >("GET_MOVIE", ({ variables }) => {
+      const airtableObj = getMediaObjectByUidOrExternalId(
+        variables.uid,
+        variables.externalId,
+      );
+      const movie =
+        airtableObj && isObjectType(airtableObj, "movie")
+          ? convertMediaObjectToGraphQL(airtableObj)
+          : null;
 
-    return HttpResponse.json({
-      data: {
-        getObject: movie,
-      },
-    });
-  }),
+      return HttpResponse.json({
+        data: {
+          getObject: movie,
+        },
+      });
+    }),
 
   graphql
     .link(SAAS_API_ENDPOINT)
-    .query("GET_MOVIE_THUMBNAIL", ({ variables }) => {
-      const airtableObj = getMediaObjectByUidOrExternalId(variables.uid, variables.externalId);
+    .query<
+      object,
+      { uid: string; externalId: string }
+    >("GET_MOVIE_THUMBNAIL", ({ variables }) => {
+      const airtableObj = getMediaObjectByUidOrExternalId(
+        variables.uid,
+        variables.externalId,
+      );
       const movie = airtableObj
         ? convertMediaObjectToGraphQL(airtableObj)
         : null;

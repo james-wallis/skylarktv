@@ -1,11 +1,11 @@
 export const initMocks = async () => {
-  if (typeof window === 'undefined') {
-    const { server } = await import('./server');
+  if (typeof window === "undefined") {
+    const { server } = await import("./server");
     server.listen();
   } else {
-    const { worker } = await import('./browser');
+    const { worker } = await import("./browser");
     await worker.start({
-      onUnhandledRequest: 'bypass',
+      onUnhandledRequest: "bypass",
     });
   }
 };

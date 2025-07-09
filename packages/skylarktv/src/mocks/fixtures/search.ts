@@ -4,20 +4,23 @@ import { searchAllObjects } from "../airtableData";
 
 export const searchHandlers = [
   // Handle search queries
-  graphql.link(SAAS_API_ENDPOINT).query("SEARCH", ({ variables }) => {
-    const query = variables.query || "";
-    const limit = variables.limit || 20;
-    
-    console.log(`SEARCH: Searching for "${query}" with limit ${limit}`);
-    
-    const searchResults = searchAllObjects(query);
-    
-    return HttpResponse.json({
-      data: {
-        search: {
-          results: searchResults.slice(0, limit),
-        },
+  graphql
+    .link(SAAS_API_ENDPOINT)
+    .query(
+      "SEARCH",
+      ({ variables }: { variables: { query?: string; limit?: number } }) => {
+        const query = variables.query || "";
+        const limit = variables.limit || 20;
+
+        const searchResults = searchAllObjects(query);
+
+        return HttpResponse.json({
+          data: {
+            search: {
+              results: searchResults.slice(0, limit),
+            },
+          },
+        });
       },
-    });
-  }),
+    ),
 ];

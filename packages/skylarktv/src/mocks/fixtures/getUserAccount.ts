@@ -3,8 +3,8 @@ import { SAAS_API_ENDPOINT } from "../../constants/env";
 
 export const getUserAccountHandlers = [
   // Handle GET_USER query
-  graphql.link(SAAS_API_ENDPOINT).query("GET_USER", () => {
-    return HttpResponse.json({
+  graphql.link(SAAS_API_ENDPOINT).query("GET_USER", () =>
+    HttpResponse.json({
       data: {
         getUser: {
           __typename: "User",
@@ -13,8 +13,8 @@ export const getUserAccountHandlers = [
           permissions: ["read"],
         },
       },
-    });
-  }),
+    }),
+  ),
 
   graphql.link(SAAS_API_ENDPOINT).query("GET_USER_ACCOUNT", () =>
     HttpResponse.json({
@@ -37,6 +37,6 @@ export const getUserAccountHandlers = [
           },
         },
       },
-    })
+    }),
   ),
 ];

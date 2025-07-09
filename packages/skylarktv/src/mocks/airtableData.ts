@@ -1,4 +1,31 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Record as AirtableRecord, Attachment, FieldSet } from "airtable";
+import { Credit } from "../types";
+import { Airtables } from "../types/airtable";
 import airtableDataRaw from "./skylark_airtable_data.json";
+
+type AirtableField = FieldSet[string];
+
+// Utility functions for type assertions
+export const assertString = (value: AirtableField): string | null =>
+  typeof value === "string" ? value : null;
+
+export const assertNumber = (value: AirtableField): number | null =>
+  typeof value === "number" ? value : null;
+
+export const assertStringArray = (value: AirtableField): string[] | null => {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+  return null;
+};
+
+export const assertSingleString = (value: AirtableField): string | null => {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? assertString(value[0] as AirtableField) : null;
+  }
+  return assertString(value);
+};
 
 // Configuration for depth limiting
 export const DEPTH_LIMIT_CONFIG = {
@@ -8,7 +35,7 @@ export const DEPTH_LIMIT_CONFIG = {
 
 // Reusable function to process nested relationships with depth limiting
 export const processNestedRelationships = <T>(
-  relationshipIds: string | string[] | null | undefined,
+  relationshipIds: AirtableField,
   processor: (id: string) => T | null,
   currentDepth: number,
   relationshipDepthCost: number = 1,
@@ -22,9 +49,22 @@ export const processNestedRelationships = <T>(
     return [];
   }
 
-  const idsArray = Array.isArray(relationshipIds)
-    ? relationshipIds
-    : [relationshipIds];
+  // Handle different types of relationship fields
+  let idsArray: string[] = [];
+
+  if (Array.isArray(relationshipIds)) {
+    // Filter to only string values
+    idsArray = relationshipIds.filter(
+      (id): id is string => typeof id === "string",
+    );
+  } else if (typeof relationshipIds === "string") {
+    idsArray = [relationshipIds];
+  }
+
+  // If we couldn't extract any string IDs, return empty array
+  if (idsArray.length === 0) {
+    return [];
+  }
 
   return idsArray.map(processor).filter((item): item is T => item !== null);
 };
@@ -32,75 +72,45 @@ export const processNestedRelationships = <T>(
 // Reusable function to wrap objects in GraphQL objects structure or return null
 export const wrapObjectsOrNull = <T>(
   items: T[] | null,
-): { objects: T[] } | null => (items !== null ? { objects: items } : null);
+): { objects: T[]; count: number; next_token: null } | null =>
+  items !== null
+    ? { objects: items, count: items.length, next_token: null }
+    : null;
 
-// Type the Airtable data
-interface AirtableRecord {
-  id: string;
-  createdTime: string;
-  fields: Record<string, any>;
-  _table: { name: string };
-}
-
-interface AirtableData {
-  dimensions: {
-    customerTypes: AirtableRecord[];
-    deviceTypes: AirtableRecord[];
-    regions: AirtableRecord[];
-  };
-  languages: AirtableRecord[];
-  translations: Record<string, AirtableRecord[]>;
-  mediaObjects: AirtableRecord[];
-  roles: AirtableRecord[];
-  people: AirtableRecord[];
-  credits: AirtableRecord[];
-  genres: AirtableRecord[];
-  themes: AirtableRecord[];
-  ratings: AirtableRecord[];
-  tags: AirtableRecord[];
-  images: AirtableRecord[];
-  availability: AirtableRecord[];
-  audienceSegments?: AirtableRecord[];
-  sets?: AirtableRecord[];
-  setsMetadata: AirtableRecord[];
-  assetTypes: AirtableRecord[];
-  imageTypes: AirtableRecord[];
-  tagTypes: AirtableRecord[];
-  callToActions: AirtableRecord[];
-  articles?: AirtableRecord[];
-}
-
-export const airtableData: AirtableData =
-  airtableDataRaw.airtable_data as AirtableData;
-
-// Debug logging to verify data is loaded correctly
-console.log("AIRTABLE DATA LOADED:", {
-  people: airtableData.people?.length || 0,
-  roles: airtableData.roles?.length || 0,
-  credits: airtableData.credits?.length || 0,
-  mediaObjects: airtableData.mediaObjects?.length || 0,
-});
+// Type the imported data - we use type assertion because JSON doesn't include Airtable Record methods
+export const airtableData = (airtableDataRaw as { airtable_data: unknown })
+  .airtable_data as Airtables;
 
 // Helper function to get image URL from image object
-export const getImageUrl = (img: AirtableRecord): string | null => {
+export const getImageUrl = (img: AirtableRecord<FieldSet>): string | null => {
   let url =
-    img.fields.cloudinary_url ||
-    img.fields.url ||
-    img.fields.external_url ||
-    img.fields.external_url_old;
+    assertString(img.fields.cloudinary_url) ||
+    assertString(img.fields.url) ||
+    assertString(img.fields.external_url) ||
+    assertString(img.fields.external_url_old);
 
   // If no direct URL, try to get from image attachments
-  if (!url && img.fields.image && img.fields.image[0]) {
-    url = img.fields.image[0].url;
+  if (
+    !url &&
+    img.fields.image &&
+    Array.isArray(img.fields.image) &&
+    img.fields.image[0] &&
+    "url" in img.fields.image[0] &&
+    assertString((img.fields.image[0] as Attachment).url)
+  ) {
+    url = (img.fields.image[0] as Attachment).url;
   }
 
   return url || null;
 };
 
 // Helper function to check if an object matches a given type (handles both lowercase and capitalized variants)
-export const isObjectType = (obj: AirtableRecord, type: string): boolean => {
+export const isObjectType = (
+  obj: AirtableRecord<FieldSet>,
+  type: string,
+): boolean => {
   const objectType = obj.fields.skylark_object_type;
-  if (!objectType) return false;
+  if (!objectType || typeof objectType !== "string") return false;
 
   // Handle plural/singular and case variations
   const typeVariants = [
@@ -172,48 +182,42 @@ export const getRoleById = (id: string) =>
 
 // Convert Airtable media object to GraphQL format
 export const convertMediaObjectToGraphQL = (
-  airtableObj: AirtableRecord,
+  airtableObj: AirtableRecord<FieldSet>,
   currentDepth: number = 0,
 ) => {
   if (!airtableObj || !airtableObj.fields) {
-    console.error(
-      "convertMediaObjectToGraphQL: Invalid airtableObj",
-      airtableObj,
-    );
     return null;
   }
 
   // Check if we've reached maximum depth
   if (currentDepth >= DEPTH_LIMIT_CONFIG.MAX_DEPTH) {
-    console.log(
-      `convertMediaObjectToGraphQL: Reached max depth ${DEPTH_LIMIT_CONFIG.MAX_DEPTH}, returning null for ${airtableObj.fields.title || airtableObj.id}`,
-    );
     return null;
   }
-
-  console.log(
-    `convertMediaObjectToGraphQL: Processing ${airtableObj.fields.title || airtableObj.id} at depth ${currentDepth}`,
-  );
 
   const { fields } = airtableObj;
   const objectType = fields.skylark_object_type;
 
-  // Determine __typename based on skylark_object_type
-  let __typename = "Movie"; // default
+  // Determine typename based on skylark_object_type
+  let typename = "Movie"; // default
   if (objectType === "episodes" || objectType === "Episode")
-    __typename = "Episode";
+    typename = "Episode";
   else if (objectType === "seasons" || objectType === "Season")
-    __typename = "Season";
+    typename = "Season";
   else if (objectType === "brands" || objectType === "Brand")
-    __typename = "Brand";
+    typename = "Brand";
   else if (objectType === "movies" || objectType === "Movie")
-    __typename = "Movie";
+    typename = "Movie";
   else if (objectType === "live-streams" || objectType === "LiveStream")
-    __typename = "LiveStream";
+    typename = "LiveStream";
 
   // Get related objects
-  const images = fields.images
-    ? (Array.isArray(fields.images) ? fields.images : [fields.images])
+  const imageIds = fields.images
+    ? assertStringArray(
+        Array.isArray(fields.images) ? fields.images : [fields.images],
+      )
+    : null;
+  const images = imageIds
+    ? imageIds
         .map((imgId: string) => {
           const img = getImageById(imgId);
           if (!img) return null;
@@ -221,16 +225,15 @@ export const convertMediaObjectToGraphQL = (
           const url = getImageUrl(img);
 
           // Handle type field which might be an array
-          let { type } = img.fields;
-          if (Array.isArray(type)) {
-            type = type[0];
-          }
+          const typeValue = assertSingleString(img.fields.type);
 
           return {
             __typename: "SkylarkImage",
             uid: img.id,
-            title: img.fields.title || img.fields["unique-title"],
-            type: type || "IMAGE",
+            title:
+              assertString(img.fields.title) ||
+              assertString(img.fields["unique-title"]),
+            type: typeValue || "IMAGE",
             url,
           };
         })
@@ -245,7 +248,7 @@ export const convertMediaObjectToGraphQL = (
         ? {
             __typename: "Genre",
             uid: genre.id,
-            name: genre.fields.name,
+            name: assertString(genre.fields.name),
           }
         : null;
     },
@@ -261,7 +264,7 @@ export const convertMediaObjectToGraphQL = (
         ? {
             __typename: "Theme",
             uid: theme.id,
-            name: theme.fields.name,
+            name: assertString(theme.fields.name),
           }
         : null;
     },
@@ -277,8 +280,8 @@ export const convertMediaObjectToGraphQL = (
         ? {
             __typename: "SkylarkTag",
             uid: tag.id,
-            name: tag.fields.name,
-            type: tag.fields.type,
+            name: assertString(tag.fields.name),
+            type: assertString(tag.fields.type),
           }
         : null;
     },
@@ -293,7 +296,7 @@ export const convertMediaObjectToGraphQL = (
       return rating
         ? {
             uid: rating.id,
-            value: rating.fields.value,
+            value: assertString(rating.fields.value),
           }
         : null;
     },
@@ -314,9 +317,9 @@ export const convertMediaObjectToGraphQL = (
           const person = getPersonById(personId);
           return person
             ? {
-                __typename: "Person",
+                __typename: "Person" as const,
                 uid: person.id,
-                name: person.fields.name,
+                name: assertString(person.fields.name),
               }
             : null;
         },
@@ -331,11 +334,11 @@ export const convertMediaObjectToGraphQL = (
           const role = getRoleById(roleId);
           return role
             ? {
-                __typename: "Role",
+                __typename: "Role" as const,
                 uid: role.id,
-                title: role.fields.title,
-                title_sort: role.fields.title_sort,
-                internal_title: role.fields.internal_title,
+                title: assertString(role.fields.title),
+                title_sort: assertString(role.fields.title_sort),
+                internal_title: assertString(role.fields.internal_title),
               }
             : null;
         },
@@ -346,10 +349,10 @@ export const convertMediaObjectToGraphQL = (
       return {
         __typename: "Credit",
         uid: credit.id,
-        character: credit.fields.character,
+        character: assertString(credit.fields.character),
         people: wrapObjectsOrNull(people),
         roles: wrapObjectsOrNull(roles),
-      };
+      } satisfies Credit;
     },
     currentDepth,
     1,
@@ -387,7 +390,7 @@ export const convertMediaObjectToGraphQL = (
   const baseObject = {
     uid: airtableObj.id,
     external_id: fields.external_id || airtableObj.id,
-    __typename,
+    __typename: typename,
     slug: fields.slug,
     title: fields.title,
     title_short: fields.title_short,
@@ -404,13 +407,13 @@ export const convertMediaObjectToGraphQL = (
   };
 
   // Add type-specific fields
-  if (__typename === "Episode") {
+  if (typename === "Episode") {
     return {
       ...baseObject,
       episode_number: fields.episode_number,
     };
   }
-  if (__typename === "Season") {
+  if (typename === "Season") {
     return {
       ...baseObject,
       season_number: fields.season_number,
@@ -418,7 +421,7 @@ export const convertMediaObjectToGraphQL = (
   }
 
   // Add assets for movies/episodes
-  if (__typename === "Movie" || __typename === "Episode") {
+  if (typename === "Movie" || typename === "Episode") {
     return {
       ...baseObject,
       assets: { objects: [] }, // Would need asset data
@@ -431,24 +434,23 @@ export const convertMediaObjectToGraphQL = (
 
 // Get all objects of a specific type
 export const getObjectsByType = (type: string) => {
-  console.log(`getObjectsByType: Looking for type "${type}"`);
-
   const filtered = airtableData.mediaObjects.filter((obj) =>
     isObjectType(obj, type),
-  );
-  console.log(
-    `getObjectsByType: Found ${filtered.length} objects of type "${type}"`,
   );
 
   return filtered.map(convertMediaObjectToGraphQL).filter(Boolean);
 };
 
 // Helper function to highlight search terms in text
-const highlightSearchTerm = (text: string, searchTerm: string): string => {
-  if (!text || !searchTerm) return text;
+const highlightSearchTerm = (
+  text: AirtableField,
+  searchTerm: string,
+): string | null => {
+  const textStr = assertString(text);
+  if (!textStr || !searchTerm) return textStr;
 
   const regex = new RegExp(`(${searchTerm})`, "gi");
-  return text.replace(regex, '<span class="search-highlight">$1</span>');
+  return textStr.replace(regex, '<span class="search-highlight">$1</span>');
 };
 
 // Search across all objects (media objects, articles, people)
@@ -461,14 +463,16 @@ export const searchAllObjects = (query: string) => {
     .filter((obj) => {
       const { fields } = obj;
       return (
-        fields.title?.toLowerCase().includes(searchTerm) ||
-        fields.title_short?.toLowerCase().includes(searchTerm) ||
-        fields.synopsis?.toLowerCase().includes(searchTerm) ||
-        fields.synopsis_short?.toLowerCase().includes(searchTerm)
+        assertString(fields.title)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.title_short)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.synopsis)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.synopsis_short)?.toLowerCase().includes(searchTerm)
       );
     })
     .map((obj) => {
       const converted = convertMediaObjectToGraphQL(obj);
+      if (!converted) return null;
+
       // Apply highlighting to matching fields
       return {
         ...converted,
@@ -477,7 +481,8 @@ export const searchAllObjects = (query: string) => {
         synopsis: highlightSearchTerm(converted.synopsis, query),
         synopsis_short: highlightSearchTerm(converted.synopsis_short, query),
       };
-    });
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 
   results.push(...mediaResults);
 
@@ -486,30 +491,30 @@ export const searchAllObjects = (query: string) => {
     .filter((article) => {
       const { fields } = article;
       return (
-        fields.title?.toLowerCase().includes(searchTerm) ||
-        fields.description?.toLowerCase().includes(searchTerm) ||
-        fields.body?.toLowerCase().includes(searchTerm)
+        assertString(fields.title)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.description)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.body)?.toLowerCase().includes(searchTerm)
       );
     })
     .map((article) => {
       // Get article images
-      const images = (article.fields.images || [])
+      const articleImageIds = assertStringArray(article.fields.images) || [];
+      const images = articleImageIds
         .map((imgId: string) => {
           const img = airtableData.images?.find((i) => i.id === imgId);
           if (!img) return null;
 
           const url = getImageUrl(img);
 
-          let { type } = img.fields;
-          if (Array.isArray(type)) {
-            type = type[0];
-          }
+          const typeValue = assertSingleString(img.fields.type);
 
           return {
             __typename: "SkylarkImage",
             uid: img.id,
-            title: img.fields.title || img.fields["unique-title"],
-            type: type || "IMAGE",
+            title:
+              assertString(img.fields.title) ||
+              assertString(img.fields["unique-title"]),
+            type: typeValue || "IMAGE",
             url,
           };
         })
@@ -522,8 +527,8 @@ export const searchAllObjects = (query: string) => {
         title: highlightSearchTerm(article.fields.title, query),
         description: highlightSearchTerm(article.fields.description, query),
         body: highlightSearchTerm(article.fields.body, query),
-        type: article.fields.type,
-        publish_date: article.fields.publish_date,
+        type: assertString(article.fields.type),
+        publish_date: assertString(article.fields.publish_date),
         images: { objects: images },
       };
     });
@@ -535,31 +540,31 @@ export const searchAllObjects = (query: string) => {
     .filter((person) => {
       const { fields } = person;
       return (
-        fields.name?.toLowerCase().includes(searchTerm) ||
-        fields.bio_long?.toLowerCase().includes(searchTerm) ||
-        fields.bio_medium?.toLowerCase().includes(searchTerm) ||
-        fields.bio_short?.toLowerCase().includes(searchTerm)
+        assertString(fields.name)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.bio_long)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.bio_medium)?.toLowerCase().includes(searchTerm) ||
+        assertString(fields.bio_short)?.toLowerCase().includes(searchTerm)
       );
     })
     .map((person) => {
       // Get person images
-      const images = (person.fields.images || [])
+      const personImageIds = assertStringArray(person.fields.images) || [];
+      const images = personImageIds
         .map((imgId: string) => {
           const img = airtableData.images?.find((i) => i.id === imgId);
           if (!img) return null;
 
           const url = getImageUrl(img);
 
-          let { type } = img.fields;
-          if (Array.isArray(type)) {
-            type = type[0];
-          }
+          const typeValue = assertSingleString(img.fields.type);
 
           return {
             __typename: "SkylarkImage",
             uid: img.id,
-            title: img.fields.title || img.fields["unique-title"],
-            type: type || "IMAGE",
+            title:
+              assertString(img.fields.title) ||
+              assertString(img.fields["unique-title"]),
+            type: typeValue || "IMAGE",
             url,
           };
         })
@@ -584,34 +589,23 @@ export const searchAllObjects = (query: string) => {
 
 // Legacy function for backward compatibility
 export const searchMediaObjects = (query: string) =>
-  searchAllObjects(query).filter((obj) =>
-    [
-      "Movie",
-      "Episode",
-      "Season",
-      "Brand",
-      "LiveStream",
-      "SkylarkSet",
-    ].includes(obj.__typename),
+  searchAllObjects(query).filter(
+    (obj) =>
+      obj &&
+      "__typename" in obj &&
+      [
+        "Movie",
+        "Episode",
+        "Season",
+        "Brand",
+        "LiveStream",
+        "SkylarkSet",
+      ].includes(obj.__typename),
   );
 
 // Get set by ID or external ID
 export const getSetById = (id: string) => {
   const sets = airtableData.sets || [];
-
-  // Debug logging
-  if (id.startsWith("rec")) {
-    console.log(`getSetById: Looking for ID "${id}"`);
-    console.log(`getSetById: Total sets available: ${sets.length}`);
-    console.log(
-      `getSetById: Available sets:`,
-      sets.map((s) => ({
-        id: s.id,
-        external_id: s.fields.external_id,
-        internal_title: s.fields.internal_title,
-      })),
-    );
-  }
 
   // First try to find in the dedicated sets array
   let foundSet = sets.find(
@@ -627,96 +621,17 @@ export const getSetById = (id: string) => {
           obj.fields.external_id === id ||
           obj.fields.slug === id),
     );
-
-    if (foundSet) {
-      console.log(
-        `getSetById: Found SkylarkSet in mediaObjects: ${foundSet.fields.internal_title}`,
-      );
-    }
   }
 
   return foundSet;
 };
 
-// Helper function to get content from a set, checking content, sets, and dynamic_content fields
-export const getSetContent = (set: AirtableRecord): string[] => {
-  // First try the content field
-  if (set.fields.content && Array.isArray(set.fields.content)) {
-    return set.fields.content;
-  }
-
-  // If no content, try the sets field (which may reference other sets)
-  if (set.fields.sets && Array.isArray(set.fields.sets)) {
-    console.log(
-      `getSetContent: Set "${set.fields.internal_title}" has no content, but references sets:`,
-      set.fields.sets,
-    );
-
-    // For sets that reference other sets, we need to get the content from the referenced sets
-    const allContent: string[] = [];
-    for (const setId of set.fields.sets) {
-      const referencedSet = getSetById(setId);
-      if (referencedSet) {
-        const referencedContent = getSetContent(referencedSet);
-        allContent.push(...referencedContent);
-      }
-    }
-    return allContent;
-  }
-
-  // If no content or sets, try dynamic_content
-  if (set.fields.dynamic_content || set.fields["Dynamic Content"]) {
-    console.log(
-      `getSetContent: Set "${set.fields.internal_title}" has dynamic content, generating content dynamically`,
-    );
-    return generateDynamicContent(set);
-  }
-
-  return [];
-};
-
-// Helper function to generate dynamic content based on rules
-const generateDynamicContent = (set: AirtableRecord): string[] => {
-  try {
-    // Parse the dynamic content JSON (try both field names)
-    const dynamicContentStr =
-      set.fields.dynamic_content || set.fields["Dynamic Content"];
-    const dynamicContent = JSON.parse(dynamicContentStr);
-
-    const { dynamic_content_types, dynamic_content_rules } = dynamicContent;
-    console.log(
-      `generateDynamicContent: Looking for ${dynamic_content_types.join(", ")} with rules:`,
-      dynamic_content_rules,
-    );
-
-    const matchingObjects = new Set<string>();
-
-    // For each rule set, find objects that match all conditions
-    for (const ruleSet of dynamic_content_rules) {
-      const currentMatches = findObjectsMatchingRules(
-        ruleSet,
-        dynamic_content_types,
-      );
-      currentMatches.forEach((id) => matchingObjects.add(id));
-    }
-
-    const result = Array.from(matchingObjects);
-    console.log(
-      `generateDynamicContent: Found ${result.length} matching objects for set "${set.fields.internal_title}"`,
-    );
-    return result;
-  } catch (error) {
-    console.error(
-      `generateDynamicContent: Error parsing dynamic content for set "${set.fields.internal_title}":`,
-      error,
-    );
-    return [];
-  }
-};
-
-// Helper function to find objects matching a set of rules
 const findObjectsMatchingRules = (
-  rules: any[],
+  rules: {
+    object_types: string[];
+    uid: string | string[] | null;
+    relationship_name: string | null;
+  }[],
   contentTypes: string[],
 ): string[] => {
   // Start with all objects of the desired types
@@ -725,18 +640,24 @@ const findObjectsMatchingRules = (
   );
 
   // Apply each rule in sequence
+  // eslint-disable-next-line no-plusplus
   for (let i = 0; i < rules.length; i++) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const rule = rules[i];
-    const { object_types, uid, relationship_name } = rule;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/naming-convention
+    const { object_types, uid: unparsedUid, relationship_name } = rule;
+    const uid = assertSingleString(unparsedUid || []);
 
     if (!relationship_name) {
       // This is the base object type filter (already applied above)
+      // eslint-disable-next-line no-continue
       continue;
     }
 
     // Filter candidates based on relationship
     candidates = candidates.filter((candidate) => {
       // Handle the chained relationship: Movie -> Credits -> Person
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       if (relationship_name === "credits" && object_types.includes("Credit")) {
         // This is the first part of the chain - check if movie has credits
         const creditsIds = candidate.fields.credits;
@@ -746,7 +667,7 @@ const findObjectsMatchingRules = (
         }
 
         // If no specific UID required, just check that credits exist
-        if (!uid || uid.length === 0) {
+        if (!uid) {
           return true;
         }
 
@@ -754,9 +675,7 @@ const findObjectsMatchingRules = (
         const creditIdsArray = Array.isArray(creditsIds)
           ? creditsIds
           : [creditsIds];
-        const hasMatch = uid.some((targetId) =>
-          creditIdsArray.includes(targetId),
-        );
+        const hasMatch = creditIdsArray.includes(uid);
         return hasMatch;
       }
 
@@ -778,14 +697,15 @@ const findObjectsMatchingRules = (
             return false;
           }
 
-          const creditPeople = credit.fields.person;
-          const creditPeopleArray = Array.isArray(creditPeople)
-            ? creditPeople
-            : [creditPeople];
+          // If no specific UID required, just check that credits exist
+          if (!uid) {
+            return true;
+          }
 
-          const personMatch = uid.some((targetPersonId) =>
-            creditPeopleArray.includes(targetPersonId),
-          );
+          const creditPeople = credit.fields.person;
+          const creditPeopleArray = assertStringArray(creditPeople) || [];
+
+          const personMatch = creditPeopleArray.includes(uid);
 
           return personMatch;
         });
@@ -820,7 +740,7 @@ const findObjectsMatchingRules = (
         if (!relatedObj) return false;
 
         return object_types.some(
-          (type) =>
+          (type: string) =>
             isObjectType(relatedObj, type) ||
             relatedObj.fields?.skylark_object_type === type ||
             (type === "Person" &&
@@ -836,67 +756,102 @@ const findObjectsMatchingRules = (
   return result;
 };
 
+// Helper function to get content from a set, checking content, sets, and dynamic_content fields
+// Helper function to generate dynamic content based on rules
+// eslint-disable-next-line @typescript-eslint/no-use-before-define
+const generateDynamicContent = (set: AirtableRecord<FieldSet>): string[] => {
+  try {
+    // Parse the dynamic content JSON (try both field names)
+    const dynamicContentStr =
+      assertString(set.fields.dynamic_content) ||
+      assertString(set.fields["Dynamic Content"]);
+    if (!dynamicContentStr) {
+      return [];
+    }
+    const dynamicContent = JSON.parse(dynamicContentStr) as {
+      dynamic_content_types: string[];
+      dynamic_content_rules: [];
+    };
+
+    if (!dynamicContent) {
+      return [];
+    }
+
+    const dynamicContentTypes = Array.isArray(
+      dynamicContent.dynamic_content_types,
+    )
+      ? dynamicContent.dynamic_content_types
+      : null;
+    const dynamicContentRules = Array.isArray(
+      dynamicContent.dynamic_content_rules,
+    )
+      ? dynamicContent.dynamic_content_rules
+      : null;
+
+    if (!dynamicContentRules || !dynamicContentTypes) {
+      return [];
+    }
+
+    const matchingObjects = new Set<string>();
+
+    // For each rule set, find objects that match all conditions
+    dynamicContentRules.forEach((ruleSet) => {
+      const currentMatches = findObjectsMatchingRules(
+        ruleSet,
+        dynamicContentTypes,
+      );
+      currentMatches.forEach((id) => matchingObjects.add(id));
+    });
+
+    const result = Array.from(matchingObjects);
+    return result;
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getSetContent = (set: AirtableRecord<FieldSet>): string[] => {
+  // First try the content field
+  if (set.fields.content && Array.isArray(set.fields.content)) {
+    return assertStringArray(set.fields.content) || [];
+  }
+
+  // If no content, try the sets field (which may reference other sets)
+  if (set.fields.sets && Array.isArray(set.fields.sets)) {
+    // For sets that reference other sets, we need to get the content from the referenced sets
+    const setIds = assertStringArray(set.fields.sets) || [];
+    const allContent = setIds.flatMap((setId) => {
+      const referencedSet = getSetById(setId);
+      return referencedSet ? getSetContent(referencedSet) : [];
+    });
+    return allContent;
+  }
+
+  // If no content or sets, try dynamic_content
+  if (set.fields.dynamic_content || set.fields["Dynamic Content"]) {
+    return generateDynamicContent(set);
+  }
+
+  return [];
+};
+
 // Helper function to resolve a set reference to the actual set
 export const resolveSetReference = (setReferenceId: string) => {
-  console.log(
-    `resolveSetReference: Looking for set reference ${setReferenceId}`,
-  );
-
   // First, find the media object that represents this set reference
   const setReference = airtableData.mediaObjects?.find(
     (obj) => obj.id === setReferenceId,
   );
 
-  if (!setReference) {
-    console.log(
-      `resolveSetReference: No media object found with ID ${setReferenceId}`,
-    );
-    return null;
-  }
-
-  if (setReference.fields.skylark_object_type !== "SkylarkSet") {
-    console.log(
-      `resolveSetReference: Media object ${setReferenceId} is not a SkylarkSet, it's ${setReference.fields.skylark_object_type}`,
-    );
-    return null;
-  }
-
-  console.log(
-    `resolveSetReference: Found SkylarkSet reference "${setReference.fields.internal_title || setReference.fields.title}"`,
-  );
-  console.log(
-    `resolveSetReference: Available fields:`,
-    Object.keys(setReference.fields),
-  );
-
   // Use the skylarkset_external_id field to find the matching set
-  const skylarksetExternalId = setReference.fields.skylarkset_external_id;
-  if (!skylarksetExternalId) {
-    console.warn(
-      `resolveSetReference: No skylarkset_external_id found for set reference ${setReferenceId}`,
-    );
-    return null;
-  }
-
-  console.log(
-    `resolveSetReference: Looking for set with external_id "${skylarksetExternalId}"`,
-  );
+  const skylarksetExternalId = setReference?.fields.skylarkset_external_id;
 
   // Find the actual set by matching skylarkset_external_id to external_id
-  const actualSet = airtableData.sets?.find(
-    (set) => set.fields.external_id === skylarksetExternalId,
-  );
-
-  if (!actualSet) {
-    console.warn(
-      `resolveSetReference: No set found with external_id "${skylarksetExternalId}" for reference ${setReferenceId}`,
+  const actualSet =
+    skylarksetExternalId &&
+    airtableData.sets?.find(
+      (set) => set.fields.external_id === skylarksetExternalId,
     );
-    return null;
-  }
 
-  console.log(
-    `resolveSetReference: Successfully resolved to set "${actualSet.fields.internal_title}"`,
-  );
   return actualSet;
 };
 
@@ -931,27 +886,14 @@ const getSetMetadata = (setId: string) => {
     return hasMatchingSet && hasEnglishLanguage;
   });
 
-  if (metadata) {
-    console.log(
-      `getSetMetadata: Found English metadata for set ${setId}:`,
-      metadata.fields.title,
-    );
-  } else {
-    console.log(`getSetMetadata: No English metadata found for set ${setId}`);
-  }
-
   return metadata;
 };
 
 // Convert Airtable set to GraphQL format with content
 export const convertSetToGraphQL = (
-  airtableSet: AirtableRecord,
+  airtableSet: AirtableRecord<FieldSet>,
   currentDepth: number = 0,
-): any => {
-  console.log(
-    `convertSetToGraphQL: Processing ${airtableSet.fields.title || airtableSet.fields.internal_title || airtableSet.id} at depth ${currentDepth}`,
-  );
-
+): object => {
   const { fields } = airtableSet;
 
   // Get metadata for this set (English language)
@@ -961,10 +903,10 @@ export const convertSetToGraphQL = (
   const finalFields = metadata ? { ...fields, ...metadata.fields } : fields;
 
   // Use the set_type field from Airtable data, fallback to type field, then default
-  let setType = finalFields.set_type || finalFields.type || "RAIL";
-
-  // Convert to uppercase if needed (Airtable might have lowercase values)
-  setType = setType.toUpperCase();
+  // and convert to uppercase if needed (Airtable might have lowercase values)
+  const setType = (
+    (finalFields.set_type || finalFields.type || "RAIL") as string
+  ).toUpperCase();
 
   // Get content for this set
   const contentIds = getSetContent(airtableSet);
@@ -1029,16 +971,15 @@ export const convertSetToGraphQL = (
           const url = getImageUrl(img);
 
           // Handle type field which might be an array
-          let { type } = img.fields;
-          if (Array.isArray(type)) {
-            type = type[0];
-          }
+          const typeValue = assertSingleString(img.fields.type);
 
           return {
             __typename: "SkylarkImage",
             uid: img.id,
-            title: img.fields.title || img.fields["unique-title"],
-            type: type || "IMAGE",
+            title:
+              assertString(img.fields.title) ||
+              assertString(img.fields["unique-title"]),
+            type: typeValue || "IMAGE",
             url,
           };
         })
