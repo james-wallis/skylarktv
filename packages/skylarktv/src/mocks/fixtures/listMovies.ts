@@ -9,7 +9,7 @@ import {
 
 export const listMoviesHandlers = [
   graphql.link(SAAS_API_ENDPOINT).query("LIST_MOVIES", () => {
-    const movies = getObjectsByType("movies");
+    const movies = getObjectsByType("movies", 0); // Movies are at depth 0 (root level)
 
     return HttpResponse.json({
       data: {
@@ -49,7 +49,7 @@ export const listMoviesHandlers = [
               : [obj.fields.genres]
             ).includes(genreId),
         )
-        .map(convertMediaObjectToGraphQL);
+        .map((movieObj) => convertMediaObjectToGraphQL(movieObj, 0)); // Movies are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {
@@ -93,7 +93,7 @@ export const listMoviesHandlers = [
               : [obj.fields.tags]
             ).includes(tagId),
         )
-        .map(convertMediaObjectToGraphQL);
+        .map((movieObj) => convertMediaObjectToGraphQL(movieObj, 0)); // Movies are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {

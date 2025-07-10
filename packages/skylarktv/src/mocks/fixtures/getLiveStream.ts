@@ -20,7 +20,7 @@ export const getLiveStreamHandlers = [
       );
       const liveStream =
         airtableObj && isObjectType(airtableObj, "LiveStream")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // LiveStream is at depth 0 (root level)
           : null;
 
       if (liveStream) {
@@ -53,7 +53,7 @@ export const getLiveStreamHandlers = [
       );
       const liveStream =
         airtableObj && isObjectType(airtableObj, "LiveStream")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // LiveStream is at depth 0 (root level)
           : null;
 
       if (liveStream) {

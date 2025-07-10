@@ -21,7 +21,7 @@ export const getEpisodeHandlers = [
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // Episode is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -43,7 +43,7 @@ export const getEpisodeHandlers = [
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // Episode is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -65,7 +65,7 @@ export const getEpisodeHandlers = [
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // Episode is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -76,7 +76,7 @@ export const getEpisodeHandlers = [
     }),
 
   graphql.link(SAAS_API_ENDPOINT).query("LIST_EPISODES", () => {
-    const episodes = getObjectsByType("episodes");
+    const episodes = getObjectsByType("episodes", 0); // Episodes are at depth 0 (root level)
 
     return HttpResponse.json({
       data: {
@@ -115,7 +115,7 @@ export const getEpisodeHandlers = [
               : [obj.fields.genres]
             ).includes(genreId),
         )
-        .map(convertMediaObjectToGraphQL);
+        .map((episodeObj) => convertMediaObjectToGraphQL(episodeObj, 0)); // Episodes are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {
@@ -158,7 +158,7 @@ export const getEpisodeHandlers = [
               : [obj.fields.tags]
             ).includes(tagId),
         )
-        .map(convertMediaObjectToGraphQL);
+        .map((episodeObj) => convertMediaObjectToGraphQL(episodeObj, 0)); // Episodes are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {

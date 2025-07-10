@@ -19,7 +19,7 @@ export const getMovieHandlers = [
       );
       const movie =
         airtableObj && isObjectType(airtableObj, "movie")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // Movie is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -40,7 +40,7 @@ export const getMovieHandlers = [
         variables.externalId,
       );
       const movie = airtableObj
-        ? convertMediaObjectToGraphQL(airtableObj)
+        ? convertMediaObjectToGraphQL(airtableObj, 0) // Movie is at depth 0 (root level)
         : null;
 
       if (movie) {

@@ -19,7 +19,7 @@ export const getSetHandlers = [
       if (set) {
         return HttpResponse.json({
           data: {
-            getObject: convertSetToGraphQL(set),
+            getObject: convertSetToGraphQL(set, 0), // Set is at depth 0 (root level)
           },
         });
       }
@@ -41,7 +41,7 @@ export const getSetHandlers = [
       if (set) {
         return HttpResponse.json({
           data: {
-            getObject: convertSetToGraphQL(set),
+            getObject: convertSetToGraphQL(set, 0), // Set is at depth 0 (root level)
           },
         });
       }
@@ -75,7 +75,7 @@ export const getSetHandlers = [
 
       return HttpResponse.json({
         data: {
-          getObject: convertSetToGraphQL(actualSet),
+          getObject: convertSetToGraphQL(actualSet, 0), // Set is at depth 0 (root level)
         },
       });
     }),
@@ -109,7 +109,7 @@ export const getSetHandlers = [
 
       return HttpResponse.json({
         data: {
-          getObject: convertSetToGraphQL(actualSet),
+          getObject: convertSetToGraphQL(actualSet, 0), // Set is at depth 0 (root level)
         },
       });
     }),
@@ -138,7 +138,7 @@ export const getSetHandlers = [
       }
 
       // Use convertSetToGraphQL with depth limiting
-      const setGraphQL = convertSetToGraphQL(actualSet);
+      const setGraphQL = convertSetToGraphQL(actualSet, 0); // Set is at depth 0 (root level)
 
       return HttpResponse.json({
         data: {
@@ -174,7 +174,7 @@ export const getSetHandlers = [
 
       return HttpResponse.json({
         data: {
-          getObject: convertSetToGraphQL(actualSet),
+          getObject: convertSetToGraphQL(actualSet, 0), // Set is at depth 0 (root level)
         },
       });
     }),

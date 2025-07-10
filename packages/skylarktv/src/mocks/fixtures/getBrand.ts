@@ -19,7 +19,7 @@ export const getBrandHandlers = [
     );
     const brand =
       airtableObj && isObjectType(airtableObj, "brand")
-        ? convertMediaObjectToGraphQL(airtableObj)
+        ? convertMediaObjectToGraphQL(airtableObj, 0) // Brand is at depth 0 (root level)
         : null;
 
     if (brand && airtableObj) {
@@ -46,7 +46,7 @@ export const getBrandHandlers = [
           );
         })
         .map((seasonObj) => {
-          const season = convertMediaObjectToGraphQL(seasonObj);
+          const season = convertMediaObjectToGraphQL(seasonObj, 1); // Seasons are at depth 1 (Brand -> Seasons)
           if (!season) return null;
 
           // Find episodes for each season using the parent field
@@ -123,7 +123,7 @@ export const getBrandHandlers = [
       );
       const brand =
         airtableObj && isObjectType(airtableObj, "brand")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // Brand is at depth 0 (root level)
           : null;
 
       if (brand) {

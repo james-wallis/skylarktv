@@ -21,7 +21,7 @@ export const getSeasonHandlers = [
       );
       const season =
         airtableObj && isObjectType(airtableObj, "season")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // Season is at depth 0 (root level)
           : null;
 
       if (!season || !airtableObj) {
@@ -43,7 +43,7 @@ export const getSeasonHandlers = [
             obj.fields.parent === airtableObj.id
           );
         })
-        .map(convertMediaObjectToGraphQL)
+        .map((episodeObj) => convertMediaObjectToGraphQL(episodeObj, 1)) // Episodes are at depth 1 (Season -> Episodes)
         .filter((ep): ep is NonNullable<typeof ep> => ep !== null)
         .sort((a, b) => {
           const aNum =
@@ -84,7 +84,7 @@ export const getSeasonHandlers = [
       );
       const season =
         airtableObj && isObjectType(airtableObj, "season")
-          ? convertMediaObjectToGraphQL(airtableObj)
+          ? convertMediaObjectToGraphQL(airtableObj, 0) // Season is at depth 0 (root level)
           : null;
 
       if (season) {

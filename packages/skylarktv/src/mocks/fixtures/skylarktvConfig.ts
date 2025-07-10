@@ -21,9 +21,9 @@ const mockSkylarkTVConfig = {
 
 // Create homepage set from Airtable data
 const createHomepageSet = () => {
-  const movies = getObjectsByType("movies").slice(0, 10);
-  const episodes = getObjectsByType("episodes").slice(0, 10);
-  const brands = getObjectsByType("brands").slice(0, 5);
+  const movies = getObjectsByType("movies", 0).slice(0, 10);
+  const episodes = getObjectsByType("episodes", 0).slice(0, 10);
+  const brands = getObjectsByType("brands", 0).slice(0, 5);
 
   const allContent = [...movies, ...episodes, ...brands];
 
