@@ -5,11 +5,13 @@ import {
   convertMediaObjectToGraphQL,
   isObjectType,
   getObjectsByType,
+  getLanguageFromRequest,
 } from "../airtableData";
 
 export const listMoviesHandlers = [
-  graphql.link(SAAS_API_ENDPOINT).query("LIST_MOVIES", () => {
-    const movies = getObjectsByType("movies", 0); // Movies are at depth 0 (root level)
+  graphql.link(SAAS_API_ENDPOINT).query("LIST_MOVIES", ({ request }) => {
+    const languageCode = getLanguageFromRequest(request.headers);
+    const movies = getObjectsByType({ type: "movies", depth: 0, languageCode }); // Movies are at depth 0 (root level)
 
     return HttpResponse.json({
       data: {
@@ -28,7 +30,7 @@ export const listMoviesHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("LIST_MOVIES_BY_GENRE", ({ variables }) => {
+    >("LIST_MOVIES_BY_GENRE", ({ variables, request }) => {
       const genreId = variables.uid || variables.externalId;
       const genre = (airtableData.genres || []).find((g) => g.id === genreId);
 
@@ -49,7 +51,14 @@ export const listMoviesHandlers = [
               : [obj.fields.genres]
             ).includes(genreId),
         )
-        .map((movieObj) => convertMediaObjectToGraphQL(movieObj, 0)); // Movies are at depth 0 (root level)
+        .map((movieObj) => {
+          const languageCode = getLanguageFromRequest(request.headers);
+          return convertMediaObjectToGraphQL({
+            airtableObj: movieObj,
+            currentDepth: 0,
+            languageCode,
+          });
+        }); // Movies are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {
@@ -72,7 +81,7 @@ export const listMoviesHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("LIST_MOVIES_BY_TAG", ({ variables }) => {
+    >("LIST_MOVIES_BY_TAG", ({ variables, request }) => {
       const tagId = variables.uid || variables.externalId;
       const tag = (airtableData.tags || []).find((t) => t.id === tagId);
 
@@ -93,7 +102,14 @@ export const listMoviesHandlers = [
               : [obj.fields.tags]
             ).includes(tagId),
         )
-        .map((movieObj) => convertMediaObjectToGraphQL(movieObj, 0)); // Movies are at depth 0 (root level)
+        .map((movieObj) => {
+          const languageCode = getLanguageFromRequest(request.headers);
+          return convertMediaObjectToGraphQL({
+            airtableObj: movieObj,
+            currentDepth: 0,
+            languageCode,
+          });
+        }); // Movies are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {

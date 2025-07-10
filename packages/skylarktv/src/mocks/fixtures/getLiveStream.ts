@@ -4,6 +4,7 @@ import {
   getMediaObjectByUidOrExternalId,
   convertMediaObjectToGraphQL,
   isObjectType,
+  getLanguageFromRequest,
 } from "../airtableData";
 
 export const getLiveStreamHandlers = [
@@ -13,14 +14,20 @@ export const getLiveStreamHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_LIVE_STREAM", ({ variables }) => {
+    >("GET_LIVE_STREAM", ({ variables, request }) => {
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const liveStream =
         airtableObj && isObjectType(airtableObj, "LiveStream")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // LiveStream is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // LiveStream is at depth 0 (root level)
           : null;
 
       if (liveStream) {
@@ -46,14 +53,20 @@ export const getLiveStreamHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_LIVE_STREAM_THUMBNAIL", ({ variables }) => {
+    >("GET_LIVE_STREAM_THUMBNAIL", ({ variables, request }) => {
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const liveStream =
         airtableObj && isObjectType(airtableObj, "LiveStream")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // LiveStream is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // LiveStream is at depth 0 (root level)
           : null;
 
       if (liveStream) {

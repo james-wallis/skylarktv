@@ -6,6 +6,7 @@ import {
   convertMediaObjectToGraphQL,
   isObjectType,
   getObjectsByType,
+  getLanguageFromRequest,
 } from "../airtableData";
 
 export const getEpisodeHandlers = [
@@ -14,14 +15,20 @@ export const getEpisodeHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_EPISODE", ({ variables }) => {
+    >("GET_EPISODE", ({ variables, request }) => {
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // Episode is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // Episode is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -36,14 +43,20 @@ export const getEpisodeHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_EPISODE_THUMBNAIL", ({ variables }) => {
+    >("GET_EPISODE_THUMBNAIL", ({ variables, request }) => {
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // Episode is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // Episode is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -58,14 +71,20 @@ export const getEpisodeHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_EPISODE_THUMBNAIL_WITH_ADDITIONAL_RELATIONSHIPS", ({ variables }) => {
+    >("GET_EPISODE_THUMBNAIL_WITH_ADDITIONAL_RELATIONSHIPS", ({ variables, request }) => {
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // Episode is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // Episode is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -75,8 +94,13 @@ export const getEpisodeHandlers = [
       });
     }),
 
-  graphql.link(SAAS_API_ENDPOINT).query("LIST_EPISODES", () => {
-    const episodes = getObjectsByType("episodes", 0); // Episodes are at depth 0 (root level)
+  graphql.link(SAAS_API_ENDPOINT).query("LIST_EPISODES", ({ request }) => {
+    const languageCode = getLanguageFromRequest(request.headers);
+    const episodes = getObjectsByType({
+      type: "episodes",
+      depth: 0,
+      languageCode,
+    }); // Episodes are at depth 0 (root level)
 
     return HttpResponse.json({
       data: {
@@ -94,7 +118,7 @@ export const getEpisodeHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("LIST_EPISODES_BY_GENRE", ({ variables }) => {
+    >("LIST_EPISODES_BY_GENRE", ({ variables, request }) => {
       const genreId = variables.uid || variables.externalId;
       const genre = (airtableData.genres || []).find((g) => g.id === genreId);
 
@@ -115,7 +139,14 @@ export const getEpisodeHandlers = [
               : [obj.fields.genres]
             ).includes(genreId),
         )
-        .map((episodeObj) => convertMediaObjectToGraphQL(episodeObj, 0)); // Episodes are at depth 0 (root level)
+        .map((episodeObj) => {
+          const languageCode = getLanguageFromRequest(request.headers);
+          return convertMediaObjectToGraphQL({
+            airtableObj: episodeObj,
+            currentDepth: 0,
+            languageCode,
+          });
+        }); // Episodes are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {
@@ -137,7 +168,7 @@ export const getEpisodeHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("LIST_EPISODES_BY_TAG", ({ variables }) => {
+    >("LIST_EPISODES_BY_TAG", ({ variables, request }) => {
       const tagId = variables.uid || variables.externalId;
       const tag = (airtableData.tags || []).find((t) => t.id === tagId);
 
@@ -158,7 +189,14 @@ export const getEpisodeHandlers = [
               : [obj.fields.tags]
             ).includes(tagId),
         )
-        .map((episodeObj) => convertMediaObjectToGraphQL(episodeObj, 0)); // Episodes are at depth 0 (root level)
+        .map((episodeObj) => {
+          const languageCode = getLanguageFromRequest(request.headers);
+          return convertMediaObjectToGraphQL({
+            airtableObj: episodeObj,
+            currentDepth: 0,
+            languageCode,
+          });
+        }); // Episodes are at depth 0 (root level)
 
       return HttpResponse.json({
         data: {

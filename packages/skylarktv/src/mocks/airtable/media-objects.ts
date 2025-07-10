@@ -21,13 +21,22 @@ import {
   wrapObjectsOrNull,
   getImageUrl,
   isObjectType,
+  findTranslationForObject,
+  mergeTranslatedContent,
 } from "./utils";
+
+// Options for convertMediaObjectToGraphQL function
+export interface ConvertMediaObjectOptions {
+  airtableObj: AirtableRecord<FieldSet>;
+  currentDepth?: number;
+  languageCode?: string;
+}
 
 // Convert Airtable media object to GraphQL format
 export const convertMediaObjectToGraphQL = (
-  airtableObj: AirtableRecord<FieldSet>,
-  currentDepth: number = 0,
+  options: ConvertMediaObjectOptions,
 ) => {
+  const { airtableObj, currentDepth = 0, languageCode } = options;
   if (!airtableObj || !airtableObj.fields) {
     return null;
   }
@@ -37,7 +46,19 @@ export const convertMediaObjectToGraphQL = (
     return null;
   }
 
-  const { fields } = airtableObj;
+  // Apply translations if language code is provided
+  let { fields } = airtableObj;
+  if (languageCode && languageCode !== "en-GB") {
+    const translation = findTranslationForObject(
+      airtableObj.id,
+      languageCode,
+      airtableData.translations?.mediaObjects || [],
+    );
+
+    if (translation) {
+      fields = mergeTranslatedContent(airtableObj.fields, translation.fields);
+    }
+  }
   const objectType = fields.skylark_object_type;
 
   // Determine typename based on skylark_object_type
@@ -275,13 +296,28 @@ export const convertMediaObjectToGraphQL = (
   return baseObject;
 };
 
+// Options for getObjectsByType function
+export interface GetObjectsByTypeOptions {
+  type: string;
+  depth: number;
+  languageCode?: string;
+}
+
 // Get all objects of a specific type
-export const getObjectsByType = (type: string, depth: number) => {
+export const getObjectsByType = (options: GetObjectsByTypeOptions) => {
+  const { type, depth, languageCode } = options;
+
   const filtered = airtableData.mediaObjects.filter((obj) =>
     isObjectType(obj, type),
   );
 
   return filtered
-    .map((obj) => convertMediaObjectToGraphQL(obj, depth))
+    .map((obj) =>
+      convertMediaObjectToGraphQL({
+        airtableObj: obj,
+        currentDepth: depth,
+        languageCode,
+      }),
+    )
     .filter(Boolean);
 };

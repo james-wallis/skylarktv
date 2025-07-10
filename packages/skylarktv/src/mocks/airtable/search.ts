@@ -10,7 +10,7 @@ import {
 } from "./utils";
 
 // Search across all objects (media objects, articles, people)
-export const searchAllObjects = (query: string) => {
+export const searchAllObjects = (query: string, languageCode?: string) => {
   const results = [];
 
   // Search media objects (Movies, Episodes, Seasons, Brands, LiveStreams, etc.)
@@ -30,7 +30,11 @@ export const searchAllObjects = (query: string) => {
       );
     })
     .map((obj) => {
-      const converted = convertMediaObjectToGraphQL(obj, 0); // Search results are at depth 0 (root level)
+      const converted = convertMediaObjectToGraphQL({
+        airtableObj: obj,
+        currentDepth: 0,
+        languageCode,
+      }); // Search results are at depth 0 (root level)
       if (!converted) return null;
 
       // Apply highlighting to matching fields

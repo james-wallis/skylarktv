@@ -156,3 +156,52 @@ export const flexibleTextMatch = (
   const normalizedSearch = normalizeSearchText(searchTerm);
   return normalizedText.includes(normalizedSearch);
 };
+
+// Translation support functions
+export const findTranslationForObject = (
+  mainObjectId: string,
+  languageCode: string,
+  translationsData: AirtableRecord<FieldSet>[],
+): AirtableRecord<FieldSet> | null =>
+  translationsData.find((translation) => {
+    const objectIds = assertStringArray(translation.fields.object) || [];
+    const translationLanguageCodes =
+      assertStringArray(translation.fields.language_code) || [];
+
+    return (
+      objectIds.includes(mainObjectId) &&
+      translationLanguageCodes.some(
+        (code) => code.toLowerCase() === languageCode.toLowerCase(),
+      )
+    );
+  }) || null;
+
+// Merge translated fields with main object fields
+export const mergeTranslatedContent = (
+  mainFields: FieldSet,
+  translationFields: FieldSet | null,
+): FieldSet => {
+  if (!translationFields) {
+    return mainFields;
+  }
+
+  // Fields that can be translated
+  const translatableFields = [
+    "title",
+    "title_short",
+    "synopsis",
+    "synopsis_short",
+  ];
+
+  const mergedFields = { ...mainFields };
+
+  // Override with translated content where available
+  translatableFields.forEach((field) => {
+    const translatedValue = translationFields[field];
+    if (translatedValue) {
+      mergedFields[field] = translatedValue;
+    }
+  });
+
+  return mergedFields;
+};

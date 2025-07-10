@@ -5,6 +5,7 @@ import {
   getMediaObjectByUidOrExternalId,
   convertMediaObjectToGraphQL,
   isObjectType,
+  getLanguageFromRequest,
 } from "../airtableData";
 
 export const getSeasonHandlers = [
@@ -14,14 +15,20 @@ export const getSeasonHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_SEASON_AND_EPISODES", ({ variables }) => {
+    >("GET_SEASON_AND_EPISODES", ({ variables, request }) => {
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const season =
         airtableObj && isObjectType(airtableObj, "season")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // Season is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // Season is at depth 0 (root level)
           : null;
 
       if (!season || !airtableObj) {
@@ -43,7 +50,13 @@ export const getSeasonHandlers = [
             obj.fields.parent === airtableObj.id
           );
         })
-        .map((episodeObj) => convertMediaObjectToGraphQL(episodeObj, 1)) // Episodes are at depth 1 (Season -> Episodes)
+        .map((episodeObj) =>
+          convertMediaObjectToGraphQL({
+            airtableObj: episodeObj,
+            currentDepth: 1,
+            languageCode,
+          }),
+        ) // Episodes are at depth 1 (Season -> Episodes)
         .filter((ep): ep is NonNullable<typeof ep> => ep !== null)
         .sort((a, b) => {
           const aNum =
@@ -77,14 +90,20 @@ export const getSeasonHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_SEASON_THUMBNAIL", ({ variables }) => {
+    >("GET_SEASON_THUMBNAIL", ({ variables, request }) => {
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const season =
         airtableObj && isObjectType(airtableObj, "season")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // Season is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // Season is at depth 0 (root level)
           : null;
 
       if (season) {

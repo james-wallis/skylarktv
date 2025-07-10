@@ -92,6 +92,7 @@ const getSetMetadata = (setId: string) => {
 export const convertSetToGraphQL = (
   airtableSet: AirtableRecord<FieldSet>,
   currentDepth: number = 0,
+  languageCode?: string,
 ): object => {
   const { fields } = airtableSet;
 
@@ -133,6 +134,7 @@ export const convertSetToGraphQL = (
                 contentObj = convertSetToGraphQL(
                   referencedSet,
                   currentDepth + 1,
+                  languageCode,
                 );
               }
             } else {
@@ -141,7 +143,11 @@ export const convertSetToGraphQL = (
                 (obj) => obj.id === contentId,
               );
               contentObj = mediaObj
-                ? convertMediaObjectToGraphQL(mediaObj, currentDepth + 1)
+                ? convertMediaObjectToGraphQL({
+                    airtableObj: mediaObj,
+                    currentDepth: currentDepth + 1,
+                    languageCode,
+                  })
                 : null;
             }
 

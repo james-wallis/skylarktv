@@ -4,6 +4,7 @@ import {
   getMediaObjectByUidOrExternalId,
   convertMediaObjectToGraphQL,
   isObjectType,
+  getLanguageFromRequest,
 } from "../airtableData";
 
 export const getMovieHandlers = [
@@ -12,14 +13,20 @@ export const getMovieHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_MOVIE", ({ variables }) => {
+    >("GET_MOVIE", ({ variables, request }) => {
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const movie =
         airtableObj && isObjectType(airtableObj, "movie")
-          ? convertMediaObjectToGraphQL(airtableObj, 0) // Movie is at depth 0 (root level)
+          ? convertMediaObjectToGraphQL({
+              airtableObj,
+              currentDepth: 0,
+              languageCode,
+            }) // Movie is at depth 0 (root level)
           : null;
 
       return HttpResponse.json({
@@ -34,13 +41,19 @@ export const getMovieHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_MOVIE_THUMBNAIL", ({ variables }) => {
+    >("GET_MOVIE_THUMBNAIL", ({ variables, request }) => {
+      const languageCode = getLanguageFromRequest(request.headers);
+
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const movie = airtableObj
-        ? convertMediaObjectToGraphQL(airtableObj, 0) // Movie is at depth 0 (root level)
+        ? convertMediaObjectToGraphQL({
+            airtableObj,
+            currentDepth: 0,
+            languageCode,
+          }) // Movie is at depth 0 (root level)
         : null;
 
       if (movie) {

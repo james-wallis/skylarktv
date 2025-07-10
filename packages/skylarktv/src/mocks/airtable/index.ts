@@ -3,6 +3,9 @@
 // Utils and types
 export * from "./utils";
 
+// Request utilities
+export * from "./requestUtils";
+
 // Data loading and getters
 export * from "./data";
 
