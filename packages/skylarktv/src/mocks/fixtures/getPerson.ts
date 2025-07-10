@@ -6,6 +6,7 @@ import {
   assertString,
   assertStringArray,
   assertSingleString,
+  convertMediaObjectToGraphQL,
 } from "../airtableData";
 
 export const getPersonHandlers = [
@@ -134,6 +135,80 @@ export const getPersonHandlers = [
         });
       }
 
+      // Find all credits for this person
+      const personCredits =
+        airtableData.credits?.filter((credit) => {
+          const creditPeople = assertStringArray(credit.fields.person) || [];
+          return creditPeople.includes(person.id);
+        }) || [];
+
+      // Convert credits to GraphQL format
+      const creditObjects = personCredits.map((credit) => {
+        // Find the role for this credit
+        const roleIds = assertStringArray(credit.fields.role) || [];
+        const roles = roleIds
+          .map((roleId) => {
+            const role = airtableData.roles?.find((r) => r.id === roleId);
+            return role
+              ? {
+                  __typename: "Role",
+                  uid: role.id,
+                  internal_title: role.fields.internal_title,
+                  title: role.fields.title,
+                  title_sort: role.fields.title_sort,
+                }
+              : null;
+          })
+          .filter(Boolean);
+
+        // Find movies and episodes linked to this credit
+        const creditMovies =
+          airtableData.mediaObjects
+            ?.filter((mediaObj) => {
+              const creditsIds =
+                assertStringArray(mediaObj.fields.credits) || [];
+              return (
+                creditsIds.includes(credit.id) &&
+                mediaObj.fields.skylark_object_type === "Movie"
+              );
+            })
+            .map((movieObj) =>
+              convertMediaObjectToGraphQL({
+                airtableObj: movieObj,
+                currentDepth: 0,
+              }),
+            )
+            .filter(Boolean) || [];
+
+        const creditEpisodes =
+          airtableData.mediaObjects
+            ?.filter((mediaObj) => {
+              const creditsIds =
+                assertStringArray(mediaObj.fields.credits) || [];
+              return (
+                creditsIds.includes(credit.id) &&
+                mediaObj.fields.skylark_object_type === "Episode"
+              );
+            })
+            .map((episodeObj) =>
+              convertMediaObjectToGraphQL({
+                airtableObj: episodeObj,
+                currentDepth: 0,
+              }),
+            )
+            .filter(Boolean) || [];
+
+        return {
+          __typename: "Credit",
+          uid: credit.id,
+          character: assertString(credit.fields.character),
+          movies: { objects: creditMovies },
+          episodes: { objects: creditEpisodes },
+          articles: { objects: [] }, // No articles in current data
+          roles: { objects: roles },
+        };
+      });
+
       return HttpResponse.json({
         data: {
           getObject: {
@@ -141,7 +216,7 @@ export const getPersonHandlers = [
             slug: person.fields.slug,
             name: person.fields.name,
             name_sort: person.fields.name_sort,
-            credits: { objects: [] }, // Would need to implement full credit relationships with movies/episodes/articles
+            credits: { objects: creditObjects },
           },
         },
       });

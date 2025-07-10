@@ -18,7 +18,9 @@ export const getEpisodeHandlers = [
       { uid: string; externalId: string }
     >("GET_EPISODE", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
-      const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -48,7 +50,9 @@ export const getEpisodeHandlers = [
       { uid: string; externalId: string }
     >("GET_EPISODE_THUMBNAIL", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
-      const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -78,7 +82,9 @@ export const getEpisodeHandlers = [
       { uid: string; externalId: string }
     >("GET_EPISODE_THUMBNAIL_WITH_ADDITIONAL_RELATIONSHIPS", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
-      const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -148,7 +154,9 @@ export const getEpisodeHandlers = [
         )
         .map((episodeObj) => {
           const languageCode = getLanguageFromRequest(request.headers);
-          const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
+          const requestedDimensions = getAvailabilityDimensionsFromRequest(
+            request.headers,
+          );
           return convertMediaObjectToGraphQL({
             airtableObj: episodeObj,
             currentDepth: 0,
@@ -201,7 +209,9 @@ export const getEpisodeHandlers = [
         )
         .map((episodeObj) => {
           const languageCode = getLanguageFromRequest(request.headers);
-          const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
+          const requestedDimensions = getAvailabilityDimensionsFromRequest(
+            request.headers,
+          );
           return convertMediaObjectToGraphQL({
             airtableObj: episodeObj,
             currentDepth: 0,

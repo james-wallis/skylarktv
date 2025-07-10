@@ -4,13 +4,11 @@ import { airtableData, getSetById, getImageById } from "./data";
 import { convertMediaObjectToGraphQL } from "./media-objects";
 import { generateDynamicContent } from "./dynamic-content";
 import {
-  assertString,
   assertStringArray,
-  assertSingleString,
   DEPTH_LIMIT_CONFIG,
   wrapObjectsOrNull,
-  getImageUrl,
 } from "./utils";
+import { parseCallToAction, parseImage } from "./parse-metadata-objects";
 
 export const getSetContent = (set: AirtableRecord<FieldSet>): string[] => {
   // First try the content field
@@ -171,25 +169,21 @@ export const convertSetToGraphQL = (
       )
         .map((imgId: string) => {
           const img = getImageById(imgId);
-          if (!img) return null;
-
-          const url = getImageUrl(img);
-
-          // Handle type field which might be an array
-          const typeValue = assertSingleString(img.fields.type);
-
-          return {
-            __typename: "SkylarkImage",
-            uid: img.id,
-            title:
-              assertString(img.fields.title) ||
-              assertString(img.fields["unique-title"]),
-            type: typeValue || "IMAGE",
-            url,
-          };
+          return parseImage(img);
         })
         .filter(Boolean)
     : [];
+
+  // Process call to actions for sets
+  const callToActionIds = assertStringArray(finalFields.call_to_actions) || [];
+  const callToActionObjects = callToActionIds
+    .map((ctaId) => {
+      const ctaRecord = airtableData.callToActions?.find(
+        (cta) => cta.id === ctaId,
+      );
+      return parseCallToAction(ctaRecord, { languageCode });
+    })
+    .filter(Boolean);
 
   return {
     __typename: "SkylarkSet",
@@ -203,5 +197,6 @@ export const convertSetToGraphQL = (
     internal_title: finalFields.internal_title,
     images: { objects: images },
     content: wrapObjectsOrNull(contentObjects),
+    call_to_actions: { objects: callToActionObjects },
   };
 };

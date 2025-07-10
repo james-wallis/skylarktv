@@ -13,15 +13,32 @@ export interface AvailabilityDimensions {
   regions: string[];
 }
 
-export const getAvailabilityDimensionsFromRequest = (headers: Headers): AvailabilityDimensions => {
+export const getAvailabilityDimensionsFromRequest = (
+  headers: Headers,
+): AvailabilityDimensions => {
   const customerTypes = headers.get("x-sl-dimension-customer-types");
   const deviceTypes = headers.get("x-sl-dimension-device-types");
   const regions = headers.get("x-sl-dimension-regions");
 
   return {
-    customerTypes: customerTypes ? customerTypes.toLowerCase().split(",").map(s => s.trim()) : [],
-    deviceTypes: deviceTypes ? deviceTypes.toLowerCase().split(",").map(s => s.trim()) : [],
-    regions: regions ? regions.toLowerCase().split(",").map(s => s.trim()) : [],
+    customerTypes: customerTypes
+      ? customerTypes
+          .toLowerCase()
+          .split(",")
+          .map((s) => s.trim())
+      : [],
+    deviceTypes: deviceTypes
+      ? deviceTypes
+          .toLowerCase()
+          .split(",")
+          .map((s) => s.trim())
+      : [],
+    regions: regions
+      ? regions
+          .toLowerCase()
+          .split(",")
+          .map((s) => s.trim())
+      : [],
   };
 };
 
