@@ -1,25 +1,36 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Record as AirtableRecord, Attachment, FieldSet } from "airtable";
-import { AvailabilityDimensions } from "./requestUtils";
 import { Airtables } from "../../types/airtable";
+import { Maybe } from "../../types";
+
+// Extract availability dimensions from request headers (case insensitive)
+export interface AvailabilityDimensions {
+  customerTypes: string[];
+  deviceTypes: string[];
+  regions: string[];
+}
 
 export type AirtableField = FieldSet[string];
 
 // Utility functions for type assertions
-export const assertString = (value: AirtableField): string | null =>
+export const assertString = (value: Maybe<AirtableField>): string | null =>
   typeof value === "string" ? value : null;
 
-export const assertNumber = (value: AirtableField): number | null =>
+export const assertNumber = (value: Maybe<AirtableField>): number | null =>
   typeof value === "number" ? value : null;
 
-export const assertStringArray = (value: AirtableField): string[] | null => {
+export const assertStringArray = (
+  value: Maybe<AirtableField>,
+): string[] | null => {
   if (Array.isArray(value)) {
     return value.filter((item): item is string => typeof item === "string");
   }
   return null;
 };
 
-export const assertSingleString = (value: AirtableField): string | null => {
+export const assertSingleString = (
+  value: Maybe<AirtableField>,
+): string | null => {
   if (Array.isArray(value)) {
     return value.length > 0 ? assertString(value[0] as AirtableField) : null;
   }
@@ -130,7 +141,7 @@ export const isObjectType = (
 
 // Helper function to highlight search terms in text
 export const highlightSearchTerm = (
-  text: AirtableField,
+  text: Maybe<AirtableField>,
   searchTerm: string,
 ): string | null => {
   const textStr = assertString(text);
@@ -226,12 +237,42 @@ export const checkAvailabilityMatch = (
   airtableData: Airtables,
 ): boolean => {
   // Get the availability record's dimensions
-  const availabilityCustomers =
+  let availabilityCustomers =
     assertStringArray(availabilityRecord.fields.customers) || [];
-  const availabilityDevices =
+  let availabilityDevices =
     assertStringArray(availabilityRecord.fields.devices) || [];
-  const availabilityRegions =
+  let availabilityRegions =
     assertStringArray(availabilityRecord.fields.regions) || [];
+
+  // If no direct dimensions, check if this availability uses segments
+  const availabilitySegments =
+    assertStringArray(availabilityRecord.fields.segments) || [];
+
+  // If segments are used, resolve them to all dimension types
+  if (availabilitySegments.length > 0) {
+    availabilitySegments.forEach((segmentId) => {
+      const segment = airtableData.audienceSegments?.find(
+        (s) => s.id === segmentId,
+      );
+      if (segment) {
+        const segmentCustomers =
+          assertStringArray(segment.fields.customers) || [];
+        const segmentDevices = assertStringArray(segment.fields.devices) || [];
+        const segmentRegions = assertStringArray(segment.fields.regions) || [];
+
+        // Merge segment dimensions with existing dimensions
+        if (availabilityCustomers.length === 0) {
+          availabilityCustomers = [...segmentCustomers];
+        }
+        if (availabilityDevices.length === 0) {
+          availabilityDevices = [...segmentDevices];
+        }
+        if (availabilityRegions.length === 0) {
+          availabilityRegions = [...segmentRegions];
+        }
+      }
+    });
+  }
 
   // Helper function to check if any requested dimension matches any available dimension (case insensitive)
   const hasMatchingDimension = (
@@ -258,9 +299,9 @@ export const checkAvailabilityMatch = (
       const record = dataArray.find((item) => item.id === id);
       if (!record) return id;
 
-      // Try different possible name fields
+      // Try different possible name fields - prioritize slug for machine-readable identifiers
       const name =
-        record.fields.name || record.fields.title || record.fields.slug || id;
+        record.fields.slug || record.fields.name || record.fields.title || id;
       return typeof name === "string" ? name.toLowerCase() : id;
     };
 
@@ -301,12 +342,23 @@ export const filterContentByAvailability = (
   requestedDimensions: AvailabilityDimensions,
   airtableData: Airtables,
 ): boolean => {
+  let availabilityIdsToCheck = contentAvailabilityIds;
+
+  // If no availability records, use the default availability record
   if (!contentAvailabilityIds || contentAvailabilityIds.length === 0) {
-    return false; // No availability means no access
+    const defaultAvailability = airtableData.availability?.find(
+      (avail) => avail.fields.default === true,
+    );
+
+    if (defaultAvailability) {
+      availabilityIdsToCheck = [defaultAvailability.id];
+    } else {
+      return false; // No availability and no default means no access
+    }
   }
 
   // Content is available if ANY of its availability records match the requested dimensions
-  return contentAvailabilityIds.some((availabilityId) => {
+  const hasMatch = availabilityIdsToCheck.some((availabilityId) => {
     const availabilityRecord = airtableData.availability?.find(
       (avail) => avail.id === availabilityId,
     );
@@ -319,4 +371,48 @@ export const filterContentByAvailability = (
       airtableData,
     );
   });
+
+  return hasMatch;
 };
+
+// Generic sorting function that handles different property types
+export const sortByProperty = <T extends object>(
+  objects: T[],
+  primaryProperty: keyof T,
+  fallbackProperty?: keyof T,
+  order: "asc" | "desc" = "asc",
+): T[] =>
+  objects.sort((a, b) => {
+    let aValue = a[primaryProperty];
+    let bValue = b[primaryProperty];
+
+    // Use fallback if primary value is missing
+    if ((aValue === undefined || aValue === null) && fallbackProperty) {
+      aValue = a[fallbackProperty];
+    }
+    if ((bValue === undefined || bValue === null) && fallbackProperty) {
+      bValue = b[fallbackProperty];
+    }
+
+    // Handle undefined/null values
+    if (aValue === undefined || aValue === null) aValue = "" as T[keyof T];
+    if (bValue === undefined || bValue === null) bValue = "" as T[keyof T];
+
+    // Numeric comparison for numbers
+    if (typeof aValue === "number" && typeof bValue === "number") {
+      return order === "asc" ? aValue - bValue : bValue - aValue;
+    }
+
+    // String comparison for strings (with numeric awareness)
+    const comparison = String(aValue).localeCompare(String(bValue), undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+
+    return order === "asc" ? comparison : -comparison;
+  });
+
+// Convenience function for title sorting
+export const sortByTitle = <T extends { title_sort?: string; title?: string }>(
+  objects: T[],
+): T[] => sortByProperty(objects, "title_sort", "title");

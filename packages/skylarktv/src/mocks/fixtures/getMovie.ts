@@ -2,10 +2,11 @@ import { graphql, HttpResponse } from "msw";
 import { SAAS_API_ENDPOINT } from "../../constants/env";
 import {
   getMediaObjectByUidOrExternalId,
-  convertMediaObjectToGraphQL,
   isObjectType,
   getLanguageFromRequest,
+  getAvailabilityDimensionsFromRequest,
 } from "../airtableData";
+import { parseMovie } from "../airtable/parse-media-objects";
 
 export const getMovieHandlers = [
   graphql
@@ -15,6 +16,9 @@ export const getMovieHandlers = [
       { uid: string; externalId: string }
     >("GET_MOVIE", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -22,11 +26,12 @@ export const getMovieHandlers = [
       );
       const movie =
         airtableObj && isObjectType(airtableObj, "movie")
-          ? convertMediaObjectToGraphQL({
+          ? parseMovie({
               airtableObj,
               currentDepth: 0,
               languageCode,
-            }) // Movie is at depth 0 (root level)
+              requestedDimensions,
+            })
           : null;
 
       return HttpResponse.json({
@@ -43,17 +48,21 @@ export const getMovieHandlers = [
       { uid: string; externalId: string }
     >("GET_MOVIE_THUMBNAIL", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
         variables.externalId,
       );
       const movie = airtableObj
-        ? convertMediaObjectToGraphQL({
+        ? parseMovie({
             airtableObj,
             currentDepth: 0,
             languageCode,
-          }) // Movie is at depth 0 (root level)
+            requestedDimensions,
+          })
         : null;
 
       if (movie) {
@@ -68,7 +77,7 @@ export const getMovieHandlers = [
               title_short: movie.title_short,
               synopsis: movie.synopsis,
               synopsis_short: movie.synopsis_short,
-              release_date: movie.release_date,
+              release_date: movie.release_date as string | null,
               images: movie.images,
               tags: movie.tags,
             },

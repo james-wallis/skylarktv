@@ -1,6 +1,10 @@
 import { graphql, HttpResponse } from "msw";
 import { SAAS_API_ENDPOINT } from "../../constants/env";
-import { searchAllObjects, getLanguageFromRequest } from "../airtableData";
+import {
+  searchAllObjects,
+  getLanguageFromRequest,
+  getAvailabilityDimensionsFromRequest,
+} from "../airtableData";
 
 export const searchHandlers = [
   // Handle search queries
@@ -18,8 +22,15 @@ export const searchHandlers = [
         const query = variables.query || "";
         const limit = variables.limit || 20;
         const languageCode = getLanguageFromRequest(request.headers);
+        const requestedDimensions = getAvailabilityDimensionsFromRequest(
+          request.headers,
+        );
 
-        const searchResults = searchAllObjects(query, languageCode);
+        const searchResults = searchAllObjects(
+          query,
+          languageCode,
+          requestedDimensions,
+        );
 
         const limitedResults = searchResults.slice(0, limit);
 

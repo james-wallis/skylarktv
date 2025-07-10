@@ -1,6 +1,6 @@
 import { graphql, HttpResponse } from "msw";
 import { SAAS_API_ENDPOINT } from "../../constants/env";
-import { airtableData } from "../airtableData";
+import { airtableData, sortByProperty } from "../airtableData";
 
 export const listGenresHandlers = [
   // Handle Genre list
@@ -12,11 +12,14 @@ export const listGenresHandlers = [
       slug: genre.fields.slug,
     }));
 
+    // Sort genres by name
+    const sortedGenres = sortByProperty(genres, "name");
+
     return HttpResponse.json({
       data: {
         listObjects: {
           next_token: null,
-          objects: genres,
+          objects: sortedGenres,
         },
       },
     });

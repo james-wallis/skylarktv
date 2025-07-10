@@ -7,7 +7,9 @@ import {
   assertStringArray,
   DEPTH_LIMIT_CONFIG,
   wrapObjectsOrNull,
+  filterContentByAvailability,
 } from "./utils";
+import type { AvailabilityDimensions } from "./utils";
 import { parseCallToAction, parseImage } from "./parse-metadata-objects";
 
 export const getSetContent = (set: AirtableRecord<FieldSet>): string[] => {
@@ -91,13 +93,19 @@ export interface ConvertSetToGraphQLOptions {
   airtableSet: AirtableRecord<FieldSet>;
   currentDepth?: number;
   languageCode?: string;
+  requestedDimensions?: AvailabilityDimensions;
 }
 
 // Convert Airtable set to GraphQL format with content
 export const convertSetToGraphQL = (
   options: ConvertSetToGraphQLOptions,
-): object => {
-  const { airtableSet, currentDepth = 0, languageCode } = options;
+): object | null => {
+  const {
+    airtableSet,
+    currentDepth = 0,
+    languageCode,
+    requestedDimensions,
+  } = options;
   const { fields } = airtableSet;
 
   // Get metadata for this set (English language)
@@ -105,6 +113,29 @@ export const convertSetToGraphQL = (
 
   // Use metadata fields if available, fallback to base set fields
   const finalFields = metadata ? { ...fields, ...metadata.fields } : fields;
+
+  // Check if any dimensions are actually requested for set-level filtering
+  const hasDimensionsRequested =
+    requestedDimensions &&
+    ((requestedDimensions.customerTypes?.length ?? 0) > 0 ||
+      (requestedDimensions.deviceTypes?.length ?? 0) > 0 ||
+      (requestedDimensions.regions?.length ?? 0) > 0);
+
+  // Filter the set itself by availability if dimensions are requested
+  if (hasDimensionsRequested && requestedDimensions) {
+    const setAvailabilityIds =
+      assertStringArray(finalFields.availability) || [];
+    const hasSetAccess = filterContentByAvailability(
+      setAvailabilityIds,
+      requestedDimensions,
+      airtableData,
+    );
+
+    // If the set doesn't have access, return null to filter it out
+    if (!hasSetAccess) {
+      return null;
+    }
+  }
 
   // Use the set_type field from Airtable data, fallback to type field, then default
   // and convert to uppercase if needed (Airtable might have lowercase values)
@@ -121,7 +152,7 @@ export const convertSetToGraphQL = (
     currentDepth + 1 < DEPTH_LIMIT_CONFIG.MAX_DEPTH
       ? contentIds
           .map((contentId: string, index: number) => {
-            let contentObj = null;
+            let contentObj: object | null = null;
 
             // Check if this content ID refers to a set reference in mediaObjects
             const setReference = airtableData.mediaObjects.find(
@@ -139,7 +170,9 @@ export const convertSetToGraphQL = (
                   airtableSet: referencedSet,
                   currentDepth: currentDepth + 1,
                   languageCode,
+                  requestedDimensions,
                 });
+                // Note: contentObj could be null if the nested set is filtered out by availability
               }
             } else {
               // Otherwise try to find it directly as a media object
@@ -151,6 +184,7 @@ export const convertSetToGraphQL = (
                     airtableObj: mediaObj,
                     currentDepth: currentDepth + 1,
                     languageCode,
+                    requestedDimensions,
                   })
                 : null;
             }

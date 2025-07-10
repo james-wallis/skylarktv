@@ -2,10 +2,11 @@ import { graphql, HttpResponse } from "msw";
 import { SAAS_API_ENDPOINT } from "../../constants/env";
 import {
   getMediaObjectByUidOrExternalId,
-  convertMediaObjectToGraphQL,
   isObjectType,
   getLanguageFromRequest,
+  getAvailabilityDimensionsFromRequest,
 } from "../airtableData";
+import { parseLiveStream } from "../airtable/parse-media-objects";
 
 export const getLiveStreamHandlers = [
   // Handle LiveStream queries
@@ -20,14 +21,18 @@ export const getLiveStreamHandlers = [
         variables.externalId,
       );
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const liveStream =
         airtableObj && isObjectType(airtableObj, "LiveStream")
-          ? convertMediaObjectToGraphQL({
+          ? parseLiveStream({
               airtableObj,
               currentDepth: 0,
               languageCode,
-            }) // LiveStream is at depth 0 (root level)
+              requestedDimensions,
+            })
           : null;
 
       if (liveStream) {
@@ -59,14 +64,18 @@ export const getLiveStreamHandlers = [
         variables.externalId,
       );
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const liveStream =
         airtableObj && isObjectType(airtableObj, "LiveStream")
-          ? convertMediaObjectToGraphQL({
+          ? parseLiveStream({
               airtableObj,
               currentDepth: 0,
               languageCode,
-            }) // LiveStream is at depth 0 (root level)
+              requestedDimensions,
+            })
           : null;
 
       if (liveStream) {

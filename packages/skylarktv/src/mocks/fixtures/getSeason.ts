@@ -6,7 +6,10 @@ import {
   convertMediaObjectToGraphQL,
   isObjectType,
   getLanguageFromRequest,
+  getAvailabilityDimensionsFromRequest,
+  sortByProperty,
 } from "../airtableData";
+import { parseSeason } from "../airtable/parse-media-objects";
 
 export const getSeasonHandlers = [
   // Handle Season and Episodes query
@@ -17,6 +20,9 @@ export const getSeasonHandlers = [
       { uid: string; externalId: string }
     >("GET_SEASON_AND_EPISODES", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -24,11 +30,12 @@ export const getSeasonHandlers = [
       );
       const season =
         airtableObj && isObjectType(airtableObj, "season")
-          ? convertMediaObjectToGraphQL({
+          ? parseSeason({
               airtableObj,
               currentDepth: 0,
               languageCode,
-            }) // Season is at depth 0 (root level)
+              requestedDimensions,
+            })
           : null;
 
       if (!season || !airtableObj) {
@@ -55,26 +62,22 @@ export const getSeasonHandlers = [
             airtableObj: episodeObj,
             currentDepth: 1,
             languageCode,
+            requestedDimensions,
           }),
         ) // Episodes are at depth 1 (Season -> Episodes)
-        .filter((ep): ep is NonNullable<typeof ep> => ep !== null)
-        .sort((a, b) => {
-          const aNum =
-            "episode_number" in a && typeof a.episode_number === "number"
-              ? a.episode_number
-              : 0;
-          const bNum =
-            "episode_number" in b && typeof b.episode_number === "number"
-              ? b.episode_number
-              : 0;
-          return aNum - bNum;
-        });
+        .filter((ep): ep is NonNullable<typeof ep> => ep !== null);
+
+      // Sort episodes by episode_number
+      const sortedEpisodes = sortByProperty(
+        episodes as Record<string, unknown>[],
+        "episode_number",
+      );
 
       // Add episodes to the season object
       const seasonWithEpisodes = {
         ...season,
         episodes: {
-          objects: episodes,
+          objects: sortedEpisodes,
         },
       };
 
@@ -92,6 +95,9 @@ export const getSeasonHandlers = [
       { uid: string; externalId: string }
     >("GET_SEASON_THUMBNAIL", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -99,11 +105,12 @@ export const getSeasonHandlers = [
       );
       const season =
         airtableObj && isObjectType(airtableObj, "season")
-          ? convertMediaObjectToGraphQL({
+          ? parseSeason({
               airtableObj,
               currentDepth: 0,
               languageCode,
-            }) // Season is at depth 0 (root level)
+              requestedDimensions,
+            })
           : null;
 
       if (season) {
@@ -118,7 +125,7 @@ export const getSeasonHandlers = [
               title_short: season.title_short,
               synopsis: season.synopsis,
               synopsis_short: season.synopsis_short,
-              release_date: season.release_date,
+              release_date: season.release_date as string | null,
               season_number:
                 "season_number" in season ? season.season_number : undefined,
               images: season.images,

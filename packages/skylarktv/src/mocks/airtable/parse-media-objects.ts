@@ -3,6 +3,7 @@
 import { Record as AirtableRecord, FieldSet } from "airtable";
 import {
   assertString,
+  assertNumber,
   assertStringArray,
   processNestedRelationships,
   wrapObjectsOrNull,
@@ -10,9 +11,18 @@ import {
   mergeTranslatedContent,
   filterContentByAvailability,
   DEPTH_LIMIT_CONFIG,
+  AvailabilityDimensions,
 } from "./utils";
-import { Credit } from "../../types";
-import { AvailabilityDimensions } from "./requestUtils";
+import {
+  Credit,
+  Episode,
+  Movie,
+  Season,
+  Brand,
+  LiveStream,
+  Availability,
+  CallToAction,
+} from "../../types";
 import {
   airtableData,
   getImageById,
@@ -200,8 +210,18 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
       : null;
 
   // Process availability records if requested dimensions are provided
-  let availabilityObjects: unknown[] = [];
-  if (requestedDimensions) {
+  let availabilityObjects: Availability[] = [];
+
+  // Check if any dimensions are actually requested
+  const hasDimensionsRequested =
+    requestedDimensions &&
+    ((requestedDimensions.customerTypes &&
+      requestedDimensions.customerTypes.length > 0) ||
+      (requestedDimensions.deviceTypes &&
+        requestedDimensions.deviceTypes.length > 0) ||
+      (requestedDimensions.regions && requestedDimensions.regions.length > 0));
+
+  if (hasDimensionsRequested) {
     const contentAvailabilityIds = assertStringArray(fields.availability) || [];
     const hasAccess = filterContentByAvailability(
       contentAvailabilityIds,
@@ -224,12 +244,12 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
 
         return parseAvailability(availRecord);
       })
-      .filter(Boolean);
+      .filter((avail): avail is Availability => !!avail);
     availabilityObjects = tempAvailabilityObjects;
   }
 
   // Process call to actions
-  let callToActionObjects: unknown[] = [];
+  let callToActionObjects: CallToAction[] = [];
   const callToActionIds = assertStringArray(fields.call_to_actions) || [];
   if (callToActionIds.length > 0) {
     const tempCallToActionObjects = callToActionIds
@@ -239,19 +259,20 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
         );
         return parseCallToAction(ctaRecord, { languageCode });
       })
-      .filter(Boolean);
+      .filter((cta): cta is CallToAction => !!cta);
     callToActionObjects = tempCallToActionObjects;
   }
 
   return {
     uid: airtableObj.id,
-    external_id: fields.external_id || airtableObj.id,
-    slug: fields.slug,
-    title: fields.title,
-    title_short: fields.title_short,
-    synopsis: fields.synopsis,
-    synopsis_short: fields.synopsis_short,
-    release_date: fields.release_date,
+    external_id: assertString(fields.external_id) || airtableObj.id,
+    slug: assertString(fields.slug),
+    title: assertString(fields.title),
+    title_short: assertString(fields.title_short),
+    title_sort: assertString(fields.title_sort),
+    synopsis: assertString(fields.synopsis),
+    synopsis_short: assertString(fields.synopsis_short),
+    release_date: assertString(fields.release_date),
     images: { objects: images },
     genres: wrapObjectsOrNull(genres),
     themes: wrapObjectsOrNull(themes),
@@ -265,7 +286,7 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
 };
 
 // Movie parsing utility
-export const parseMovie = (options: MediaObjectParseOptions) => {
+export const parseMovie = (options: MediaObjectParseOptions): Movie | null => {
   const baseObject = parseMediaObject(options);
   if (!baseObject) return null;
 
@@ -278,33 +299,37 @@ export const parseMovie = (options: MediaObjectParseOptions) => {
 };
 
 // Episode parsing utility
-export const parseEpisode = (options: MediaObjectParseOptions) => {
+export const parseEpisode = (
+  options: MediaObjectParseOptions,
+): Episode | null => {
   const baseObject = parseMediaObject(options);
   if (!baseObject) return null;
 
   return {
     ...baseObject,
     __typename: "Episode",
-    episode_number: baseObject.fields.episode_number,
+    episode_number: assertNumber(baseObject.fields.episode_number),
     assets: { objects: [] }, // Would need asset data
     brands: { objects: [] }, // Would need to link parent brands
   };
 };
 
 // Season parsing utility
-export const parseSeason = (options: MediaObjectParseOptions) => {
+export const parseSeason = (
+  options: MediaObjectParseOptions,
+): Season | null => {
   const baseObject = parseMediaObject(options);
   if (!baseObject) return null;
 
   return {
     ...baseObject,
     __typename: "Season",
-    season_number: baseObject.fields.season_number,
+    season_number: assertNumber(baseObject.fields.season_number),
   };
 };
 
 // Brand parsing utility
-export const parseBrand = (options: MediaObjectParseOptions) => {
+export const parseBrand = (options: MediaObjectParseOptions): Brand | null => {
   const baseObject = parseMediaObject(options);
   if (!baseObject) return null;
 
@@ -315,7 +340,9 @@ export const parseBrand = (options: MediaObjectParseOptions) => {
 };
 
 // LiveStream parsing utility
-export const parseLiveStream = (options: MediaObjectParseOptions) => {
+export const parseLiveStream = (
+  options: MediaObjectParseOptions,
+): LiveStream | null => {
   const baseObject = parseMediaObject(options);
   if (!baseObject) return null;
 

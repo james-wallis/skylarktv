@@ -3,39 +3,39 @@ import { SAAS_API_ENDPOINT } from "../../constants/env";
 import {
   airtableData,
   getMediaObjectByUidOrExternalId,
-  convertMediaObjectToGraphQL,
   isObjectType,
   assertNumber,
   assertStringArray,
   getLanguageFromRequest,
+  getAvailabilityDimensionsFromRequest,
+  sortByProperty,
 } from "../airtableData";
+import { parseBrand, parseSeason } from "../airtable/parse-media-objects";
 
 export const getBrandHandlers = [
   graphql
     .link(SAAS_API_ENDPOINT)
     .query("GET_BRAND", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        variables.uid,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        variables.externalId,
+        variables.uid as string,
+        variables.externalId as string,
       );
       const brand =
         airtableObj && isObjectType(airtableObj, "brand")
-          ? convertMediaObjectToGraphQL({
+          ? parseBrand({
               airtableObj,
               currentDepth: 0,
               languageCode,
-            }) // Brand is at depth 0 (root level)
+              requestedDimensions,
+            })
           : null;
 
       if (brand && airtableObj) {
-        console.log(
-          `GET_BRAND: Looking for seasons and episodes for brand ${airtableObj.id}`,
-        );
-
         // Find seasons that belong to this brand
         // Check multiple possible relationship fields
         const seasons = airtableData.mediaObjects
@@ -50,18 +50,17 @@ export const getBrandHandlers = [
                 )) ||
               (obj.fields.parent &&
                 Array.isArray(obj.fields.parent) &&
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-                obj.fields.parent.includes(airtableObj!.id)) ||
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-              obj.fields.parent === airtableObj!.id
+                obj.fields.parent.includes(airtableObj.id)) ||
+              obj.fields.parent === airtableObj.id
             );
           })
           .map((seasonObj) => {
-            const season = convertMediaObjectToGraphQL({
+            const season = parseSeason({
               airtableObj: seasonObj,
               currentDepth: 1,
               languageCode,
-            }); // Seasons are at depth 1 (Brand -> Seasons)
+              requestedDimensions,
+            });
             if (!season) return null;
 
             // Find episodes for each season using the parent field
@@ -73,7 +72,6 @@ export const getBrandHandlers = [
                 return (
                   (obj.fields.parent &&
                     Array.isArray(obj.fields.parent) &&
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
                     obj.fields.parent.includes(seasonObj.id)) ||
                   obj.fields.parent === seasonObj.id
                 );
@@ -83,38 +81,32 @@ export const getBrandHandlers = [
                 uid: ep.id,
                 slug: ep.fields.slug,
                 episode_number: assertNumber(ep.fields.episode_number),
-              }))
-              .sort((a, b) => {
-                const aNum =
-                  typeof a.episode_number === "number" ? a.episode_number : 0;
-                const bNum =
-                  typeof b.episode_number === "number" ? b.episode_number : 0;
-                return aNum - bNum;
-              });
+              }));
+
+            // Sort episodes by episode_number
+            const sortedEpisodes = sortByProperty(
+              episodes as Record<string, unknown>[],
+              "episode_number",
+            );
 
             return {
               ...season,
-              episodes: { objects: episodes },
+              episodes: { objects: sortedEpisodes },
             };
           })
-          .filter((s): s is NonNullable<typeof s> => s !== null)
-          .sort((a, b) => {
-            const aNum =
-              "season_number" in a && typeof a.season_number === "number"
-                ? a.season_number
-                : 0;
-            const bNum =
-              "season_number" in b && typeof b.season_number === "number"
-                ? b.season_number
-                : 0;
-            return bNum - aNum;
-          }); // Descending order
+          .filter((s): s is NonNullable<typeof s> => s !== null);
+
+        // Sort seasons by season_number
+        const sortedSeasons = sortByProperty(
+          seasons as Record<string, unknown>[],
+          "season_number",
+        );
 
         return HttpResponse.json({
           data: {
             getObject: {
               ...brand,
-              seasons: { objects: seasons },
+              seasons: { objects: sortedSeasons },
             },
           },
         });
@@ -131,20 +123,22 @@ export const getBrandHandlers = [
     .link(SAAS_API_ENDPOINT)
     .query("GET_BRAND_THUMBNAIL", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(
+        request.headers,
+      );
 
       const airtableObj = getMediaObjectByUidOrExternalId(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        variables.uid,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        variables.externalId,
+        variables.uid as string,
+        variables.externalId as string,
       );
       const brand =
         airtableObj && isObjectType(airtableObj, "brand")
-          ? convertMediaObjectToGraphQL({
+          ? parseBrand({
               airtableObj,
               currentDepth: 0,
               languageCode,
-            }) // Brand is at depth 0 (root level)
+              requestedDimensions,
+            })
           : null;
 
       if (brand) {
@@ -159,7 +153,7 @@ export const getBrandHandlers = [
               title_short: brand.title_short,
               synopsis: brand.synopsis,
               synopsis_short: brand.synopsis_short,
-              release_date: brand.release_date,
+              release_date: brand.release_date as string | null,
               images: brand.images,
               tags: brand.tags,
             },

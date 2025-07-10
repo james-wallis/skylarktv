@@ -1,5 +1,6 @@
 import { airtableData } from "./data";
-import { isObjectType } from "./utils";
+import { isObjectType, sortByTitle, sortByProperty } from "./utils";
+import type { AvailabilityDimensions } from "./utils";
 import {
   parseMovie,
   parseEpisode,
@@ -61,23 +62,52 @@ export interface GetObjectsByTypeOptions {
   type: string;
   depth: number;
   languageCode?: string;
+  requestedDimensions?: AvailabilityDimensions;
 }
 
 // Get all objects of a specific type
 export const getObjectsByType = (options: GetObjectsByTypeOptions) => {
-  const { type, depth, languageCode } = options;
+  const {
+    type,
+    depth,
+    languageCode,
+    requestedDimensions,
+  }: GetObjectsByTypeOptions = options;
 
   const filtered = airtableData.mediaObjects.filter((obj) =>
     isObjectType(obj, type),
   );
 
-  return filtered
-    .map((obj) =>
-      convertMediaObjectToGraphQL({
-        airtableObj: obj,
-        currentDepth: depth,
-        languageCode,
-      }),
+  const converted = filtered
+    .map(
+      (obj) =>
+        convertMediaObjectToGraphQL({
+          airtableObj: obj,
+          currentDepth: depth,
+          languageCode,
+          requestedDimensions,
+        }) as Record<string, unknown> | null,
     )
-    .filter(Boolean);
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  // Sort based on object type
+  // People use name_sort
+  if (
+    type.toLowerCase().includes("person") ||
+    type.toLowerCase().includes("people")
+  ) {
+    return sortByProperty(converted, "name_sort", "name");
+  }
+
+  // Metadata objects that use name field (genres, themes, tags)
+  if (
+    type.toLowerCase().includes("genre") ||
+    type.toLowerCase().includes("theme") ||
+    type.toLowerCase().includes("tag")
+  ) {
+    return sortByProperty(converted, "name");
+  }
+
+  // Sort by title_sort, falling back to title (for media objects)
+  return sortByTitle(converted);
 };

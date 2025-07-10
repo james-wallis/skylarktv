@@ -109,8 +109,6 @@ const Page: NextPage<{
               }
             )?.[SkylarkTVAdditionalFields.PreferredImageType];
 
-            console.log({ item, content, data });
-
             if (item.__typename === "SkylarkSet") {
               if (item.type === SkylarkTVSupportedSetType.Slider) {
                 return (

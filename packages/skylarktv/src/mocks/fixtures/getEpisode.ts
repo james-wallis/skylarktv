@@ -3,12 +3,12 @@ import { SAAS_API_ENDPOINT } from "../../constants/env";
 import {
   airtableData,
   getMediaObjectByUidOrExternalId,
-  convertMediaObjectToGraphQL,
   isObjectType,
   getObjectsByType,
   getLanguageFromRequest,
   getAvailabilityDimensionsFromRequest,
 } from "../airtableData";
+import { parseEpisode } from "../airtable/parse-media-objects";
 
 export const getEpisodeHandlers = [
   graphql
@@ -28,12 +28,12 @@ export const getEpisodeHandlers = [
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL({
+          ? parseEpisode({
               airtableObj,
               currentDepth: 0,
               languageCode,
               requestedDimensions,
-            }) // Episode is at depth 0 (root level)
+            })
           : null;
 
       return HttpResponse.json({
@@ -60,12 +60,12 @@ export const getEpisodeHandlers = [
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL({
+          ? parseEpisode({
               airtableObj,
               currentDepth: 0,
               languageCode,
               requestedDimensions,
-            }) // Episode is at depth 0 (root level)
+            })
           : null;
 
       return HttpResponse.json({
@@ -92,12 +92,12 @@ export const getEpisodeHandlers = [
       );
       const episode =
         airtableObj && isObjectType(airtableObj, "episode")
-          ? convertMediaObjectToGraphQL({
+          ? parseEpisode({
               airtableObj,
               currentDepth: 0,
               languageCode,
               requestedDimensions,
-            }) // Episode is at depth 0 (root level)
+            })
           : null;
 
       return HttpResponse.json({
@@ -157,7 +157,7 @@ export const getEpisodeHandlers = [
           const requestedDimensions = getAvailabilityDimensionsFromRequest(
             request.headers,
           );
-          return convertMediaObjectToGraphQL({
+          return parseEpisode({
             airtableObj: episodeObj,
             currentDepth: 0,
             languageCode,
@@ -212,7 +212,7 @@ export const getEpisodeHandlers = [
           const requestedDimensions = getAvailabilityDimensionsFromRequest(
             request.headers,
           );
-          return convertMediaObjectToGraphQL({
+          return parseEpisode({
             airtableObj: episodeObj,
             currentDepth: 0,
             languageCode,

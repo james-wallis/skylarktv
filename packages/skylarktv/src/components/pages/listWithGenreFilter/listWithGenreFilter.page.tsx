@@ -42,8 +42,6 @@ export const ListObjectsWithGenreFilter: NextPage<
     setActiveGenre(genre ? { uid: genre?.uid, name: newGenre } : null);
   };
 
-  console.log({ genres, isGenreError });
-
   if (!isLoadingObjects && isGenreError) {
     return (
       <DisplayError error={isGenreError} notFoundMessage="No Genres found." />

@@ -8,9 +8,14 @@ import {
   highlightSearchTerm,
   flexibleTextMatch,
 } from "./utils";
+import type { AvailabilityDimensions } from "./utils";
 
 // Search across all objects (media objects, articles, people)
-export const searchAllObjects = (query: string, languageCode?: string) => {
+export const searchAllObjects = (
+  query: string,
+  languageCode?: string,
+  requestedDimensions?: AvailabilityDimensions,
+) => {
   const results = [];
 
   // Search media objects (Movies, Episodes, Seasons, Brands, LiveStreams, etc.)
@@ -34,6 +39,7 @@ export const searchAllObjects = (query: string, languageCode?: string) => {
         airtableObj: obj,
         currentDepth: 0,
         languageCode,
+        requestedDimensions,
       }); // Search results are at depth 0 (root level)
       if (!converted) return null;
 
@@ -44,7 +50,7 @@ export const searchAllObjects = (query: string, languageCode?: string) => {
         title_short: highlightSearchTerm(converted.title_short, query),
         synopsis: highlightSearchTerm(converted.synopsis, query),
         synopsis_short: highlightSearchTerm(converted.synopsis_short, query),
-      };
+      } as typeof converted;
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
 
@@ -166,6 +172,7 @@ export const searchMediaObjects = (query: string) =>
     (obj) =>
       obj &&
       "__typename" in obj &&
+      obj.__typename &&
       [
         "Movie",
         "Episode",
