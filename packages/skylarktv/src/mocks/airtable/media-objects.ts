@@ -23,20 +23,23 @@ import {
   isObjectType,
   findTranslationForObject,
   mergeTranslatedContent,
+  filterContentByAvailability,
 } from "./utils";
+import { AvailabilityDimensions } from "./requestUtils";
 
 // Options for convertMediaObjectToGraphQL function
 export interface ConvertMediaObjectOptions {
   airtableObj: AirtableRecord<FieldSet>;
   currentDepth?: number;
   languageCode?: string;
+  requestedDimensions?: AvailabilityDimensions;
 }
 
 // Convert Airtable media object to GraphQL format
 export const convertMediaObjectToGraphQL = (
   options: ConvertMediaObjectOptions,
 ) => {
-  const { airtableObj, currentDepth = 0, languageCode } = options;
+  const { airtableObj, currentDepth = 0, languageCode, requestedDimensions } = options;
   if (!airtableObj || !airtableObj.fields) {
     return null;
   }
@@ -267,7 +270,7 @@ export const convertMediaObjectToGraphQL = (
     tags: wrapObjectsOrNull(tags),
     ratings: wrapObjectsOrNull(ratings),
     credits: wrapObjectsOrNull(credits),
-    availability: { objects: [] },
+    availability: { objects: [] }, // Will be processed below
   };
 
   // Add type-specific fields
@@ -282,6 +285,40 @@ export const convertMediaObjectToGraphQL = (
       ...baseObject,
       season_number: fields.season_number,
     };
+  }
+
+  // Process availability records if requested dimensions are provided
+  if (requestedDimensions) {
+    const contentAvailabilityIds = assertStringArray(fields.availability) || [];
+    const hasAccess = filterContentByAvailability(
+      contentAvailabilityIds,
+      requestedDimensions,
+      airtableData,
+    );
+    
+    // If no access, return null to filter out this content
+    if (!hasAccess) {
+      return null;
+    }
+    
+    // Convert availability IDs to availability objects
+    const availabilityObjects = contentAvailabilityIds
+      .map(availId => {
+        const availRecord = airtableData.availability?.find(
+          (avail: any) => avail.id === availId
+        );
+        if (!availRecord) return null;
+        
+        return {
+          __typename: "Availability",
+          uid: availRecord.id,
+          title: assertString(availRecord.fields.title) || "",
+          slug: assertString(availRecord.fields.slug) || "",
+        };
+      })
+      .filter(Boolean);
+    
+    baseObject.availability = { objects: availabilityObjects };
   }
 
   // Add assets for movies/episodes

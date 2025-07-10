@@ -205,3 +205,85 @@ export const mergeTranslatedContent = (
 
   return mergedFields;
 };
+
+// Availability support functions
+import { AvailabilityDimensions } from "./requestUtils";
+
+export const checkAvailabilityMatch = (
+  availabilityRecord: AirtableRecord<FieldSet>,
+  requestedDimensions: AvailabilityDimensions,
+  airtableData: any,
+): boolean => {
+  // Get the availability record's dimensions
+  const availabilityCustomers = assertStringArray(availabilityRecord.fields.customers) || [];
+  const availabilityDevices = assertStringArray(availabilityRecord.fields.devices) || [];
+  const availabilityRegions = assertStringArray(availabilityRecord.fields.regions) || [];
+
+  // Helper function to check if any requested dimension matches any available dimension (case insensitive)
+  const hasMatchingDimension = (requested: string[], available: string[], dimensionType: string) => {
+    if (requested.length === 0) return true; // No dimensions requested means no restriction
+    if (available.length === 0) return false; // No dimensions available means no access
+
+    // Get dimension names from IDs for comparison
+    const getNameFromId = (id: string, type: string) => {
+      const dataArray = airtableData[type];
+      if (!dataArray) return id;
+      
+      const record = dataArray.find((item: any) => item.id === id);
+      if (!record) return id;
+      
+      // Try different possible name fields
+      const name = record.fields.name || record.fields.title || record.fields.slug || id;
+      return typeof name === 'string' ? name.toLowerCase() : id;
+    };
+
+    const availableNames = available.map(id => getNameFromId(id, dimensionType));
+    return requested.some(reqDim => 
+      availableNames.some(availName => 
+        availName.includes(reqDim) || reqDim.includes(availName)
+      )
+    );
+  };
+
+  // Check all dimensions - all must match for strict availability
+  const customerMatch = hasMatchingDimension(
+    requestedDimensions.customerTypes,
+    availabilityCustomers,
+    'customerTypes'
+  );
+  
+  const deviceMatch = hasMatchingDimension(
+    requestedDimensions.deviceTypes,
+    availabilityDevices,
+    'deviceTypes'
+  );
+  
+  const regionMatch = hasMatchingDimension(
+    requestedDimensions.regions,
+    availabilityRegions,
+    'regions'
+  );
+
+  return customerMatch && deviceMatch && regionMatch;
+};
+
+export const filterContentByAvailability = (
+  contentAvailabilityIds: string[],
+  requestedDimensions: AvailabilityDimensions,
+  airtableData: any,
+): boolean => {
+  if (!contentAvailabilityIds || contentAvailabilityIds.length === 0) {
+    return false; // No availability means no access
+  }
+
+  // Content is available if ANY of its availability records match the requested dimensions
+  return contentAvailabilityIds.some(availabilityId => {
+    const availabilityRecord = airtableData.availability?.find(
+      (avail: AirtableRecord<FieldSet>) => avail.id === availabilityId
+    );
+    
+    if (!availabilityRecord) return false;
+    
+    return checkAvailabilityMatch(availabilityRecord, requestedDimensions, airtableData);
+  });
+};

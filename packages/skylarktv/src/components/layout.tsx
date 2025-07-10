@@ -120,7 +120,8 @@ export const SkylarkTVLayout: React.FC<Props> = ({
 
   const { permissions } = useUser();
 
-  const includeDimensionSettings = !permissions || permissions.length > 1;
+  const includeDimensionSettings =
+    !permissions || permissions.length > 1 || true; // TODO fix the user request so that dimension settings works (the response is wrong atm)
 
   return (
     <>

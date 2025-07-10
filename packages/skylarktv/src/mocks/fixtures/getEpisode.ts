@@ -7,6 +7,7 @@ import {
   isObjectType,
   getObjectsByType,
   getLanguageFromRequest,
+  getAvailabilityDimensionsFromRequest,
 } from "../airtableData";
 
 export const getEpisodeHandlers = [
@@ -17,6 +18,7 @@ export const getEpisodeHandlers = [
       { uid: string; externalId: string }
     >("GET_EPISODE", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -28,6 +30,7 @@ export const getEpisodeHandlers = [
               airtableObj,
               currentDepth: 0,
               languageCode,
+              requestedDimensions,
             }) // Episode is at depth 0 (root level)
           : null;
 
@@ -45,6 +48,7 @@ export const getEpisodeHandlers = [
       { uid: string; externalId: string }
     >("GET_EPISODE_THUMBNAIL", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -56,6 +60,7 @@ export const getEpisodeHandlers = [
               airtableObj,
               currentDepth: 0,
               languageCode,
+              requestedDimensions,
             }) // Episode is at depth 0 (root level)
           : null;
 
@@ -73,6 +78,7 @@ export const getEpisodeHandlers = [
       { uid: string; externalId: string }
     >("GET_EPISODE_THUMBNAIL_WITH_ADDITIONAL_RELATIONSHIPS", ({ variables, request }) => {
       const languageCode = getLanguageFromRequest(request.headers);
+      const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
 
       const airtableObj = getMediaObjectByUidOrExternalId(
         variables.uid,
@@ -84,6 +90,7 @@ export const getEpisodeHandlers = [
               airtableObj,
               currentDepth: 0,
               languageCode,
+              requestedDimensions,
             }) // Episode is at depth 0 (root level)
           : null;
 
@@ -141,12 +148,15 @@ export const getEpisodeHandlers = [
         )
         .map((episodeObj) => {
           const languageCode = getLanguageFromRequest(request.headers);
+          const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
           return convertMediaObjectToGraphQL({
             airtableObj: episodeObj,
             currentDepth: 0,
             languageCode,
+            requestedDimensions,
           });
-        }); // Episodes are at depth 0 (root level)
+        })
+        .filter(Boolean); // Filter out episodes without access
 
       return HttpResponse.json({
         data: {
@@ -191,12 +201,15 @@ export const getEpisodeHandlers = [
         )
         .map((episodeObj) => {
           const languageCode = getLanguageFromRequest(request.headers);
+          const requestedDimensions = getAvailabilityDimensionsFromRequest(request.headers);
           return convertMediaObjectToGraphQL({
             airtableObj: episodeObj,
             currentDepth: 0,
             languageCode,
+            requestedDimensions,
           });
-        }); // Episodes are at depth 0 (root level)
+        })
+        .filter(Boolean); // Filter out episodes without access
 
       return HttpResponse.json({
         data: {

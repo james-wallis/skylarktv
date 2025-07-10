@@ -6,6 +6,25 @@ export const getLanguageFromRequest = (headers: Headers): string => {
   return language ? language.toLowerCase() : "en-gb";
 };
 
+// Extract availability dimensions from request headers (case insensitive)
+export interface AvailabilityDimensions {
+  customerTypes: string[];
+  deviceTypes: string[];
+  regions: string[];
+}
+
+export const getAvailabilityDimensionsFromRequest = (headers: Headers): AvailabilityDimensions => {
+  const customerTypes = headers.get("x-sl-dimension-customer-types");
+  const deviceTypes = headers.get("x-sl-dimension-device-types");
+  const regions = headers.get("x-sl-dimension-regions");
+
+  return {
+    customerTypes: customerTypes ? customerTypes.toLowerCase().split(",").map(s => s.trim()) : [],
+    deviceTypes: deviceTypes ? deviceTypes.toLowerCase().split(",").map(s => s.trim()) : [],
+    regions: regions ? regions.toLowerCase().split(",").map(s => s.trim()) : [],
+  };
+};
+
 // Could add more request utilities here in the future:
 // - getUserFromRequest
 // - getDeviceFromRequest
