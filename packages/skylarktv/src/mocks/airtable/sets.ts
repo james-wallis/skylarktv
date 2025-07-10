@@ -7,9 +7,11 @@ import {
   assertStringArray,
   DEPTH_LIMIT_CONFIG,
   wrapObjectsOrNull,
-  filterContentByAvailability,
 } from "./utils";
-import type { AvailabilityDimensions } from "./utils";
+import {
+  filterContentByAvailability,
+  AvailabilityDimensions,
+} from "./availability";
 import { parseCallToAction, parseImage } from "./parse-metadata-objects";
 
 export const getSetContent = (set: AirtableRecord<FieldSet>): string[] => {

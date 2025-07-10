@@ -1,6 +1,6 @@
 import { airtableData } from "./data";
 import { isObjectType, sortByTitle, sortByProperty } from "./utils";
-import type { AvailabilityDimensions } from "./utils";
+import type { AvailabilityDimensions } from "./availability";
 import {
   parseMovie,
   parseEpisode,

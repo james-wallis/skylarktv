@@ -8,7 +8,7 @@ import {
   highlightSearchTerm,
   flexibleTextMatch,
 } from "./utils";
-import type { AvailabilityDimensions } from "./utils";
+import type { AvailabilityDimensions } from "./availability";
 
 // Search across all objects (media objects, articles, people)
 export const searchAllObjects = (

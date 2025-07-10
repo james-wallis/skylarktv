@@ -1,6 +1,6 @@
 // Utilities for handling MSW request objects
 
-import { AvailabilityDimensions } from "./utils";
+import { AvailabilityDimensions } from "./availability";
 
 // Extract language code from request headers (case insensitive)
 export const getLanguageFromRequest = (headers: Headers): string => {

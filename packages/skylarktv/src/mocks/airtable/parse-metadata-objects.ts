@@ -16,7 +16,6 @@ import {
   Rating,
   Person,
   Role,
-  Availability,
   CallToAction,
 } from "../../types";
 import { airtableData } from "./data";
@@ -201,22 +200,6 @@ export const parseRole = (
     title: assertString(fields.title),
     title_sort: assertString(fields.title_sort),
     internal_title: assertString(fields.internal_title),
-  };
-};
-
-// Availability parsing utility
-export const parseAvailability = (
-  availRecord: AirtableRecord<FieldSet> | undefined,
-): Availability | null => {
-  if (!availRecord) return null;
-
-  return {
-    __typename: "Availability",
-    uid: availRecord.id,
-    external_id: assertString(availRecord.fields.external_id) || availRecord.id,
-    title: assertString(availRecord.fields.title),
-    slug: assertString(availRecord.fields.slug),
-    end: assertString(availRecord.fields.end),
   };
 };
 

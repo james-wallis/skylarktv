@@ -9,10 +9,13 @@ import {
   wrapObjectsOrNull,
   findTranslationForObject,
   mergeTranslatedContent,
-  filterContentByAvailability,
   DEPTH_LIMIT_CONFIG,
-  AvailabilityDimensions,
 } from "./utils";
+import {
+  filterContentByAvailability,
+  AvailabilityDimensions,
+  parseAvailability,
+} from "./availability";
 import {
   Credit,
   Episode,
@@ -42,7 +45,6 @@ import {
   parseRating,
   parsePerson,
   parseRole,
-  parseAvailability,
   parseCallToAction,
 } from "./parse-metadata-objects";
 
