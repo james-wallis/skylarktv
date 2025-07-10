@@ -4,6 +4,7 @@ import {
   getSetById,
   convertSetToGraphQL,
   resolveSetReference,
+  getLanguageFromRequest,
 } from "../airtableData";
 
 export const getSetHandlers = [
@@ -12,14 +13,19 @@ export const getSetHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_SET", ({ variables }) => {
+    >("GET_SET", ({ request, variables }) => {
       const setId = variables.uid || variables.externalId;
+      const languageCode = getLanguageFromRequest(request.headers);
       const set = getSetById(setId);
 
       if (set) {
         return HttpResponse.json({
           data: {
-            getObject: convertSetToGraphQL(set, 0), // Set is at depth 0 (root level)
+            getObject: convertSetToGraphQL({
+              airtableSet: set,
+              currentDepth: 0,
+              languageCode,
+            }), // Set is at depth 0 (root level)
           },
         });
       }
@@ -34,14 +40,19 @@ export const getSetHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_SET_THUMBNAIL", ({ variables }) => {
+    >("GET_SET_THUMBNAIL", ({ request, variables }) => {
       const setId = variables.uid || variables.externalId;
+      const languageCode = getLanguageFromRequest(request.headers);
       const set = getSetById(setId);
 
       if (set) {
         return HttpResponse.json({
           data: {
-            getObject: convertSetToGraphQL(set, 0), // Set is at depth 0 (root level)
+            getObject: convertSetToGraphQL({
+              airtableSet: set,
+              currentDepth: 0,
+              languageCode,
+            }), // Set is at depth 0 (root level)
           },
         });
       }
@@ -56,8 +67,9 @@ export const getSetHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_SET_FOR_CAROUSEL", ({ variables }) => {
+    >("GET_SET_FOR_CAROUSEL", ({ request, variables }) => {
       const setId = variables.uid || variables.externalId;
+      const languageCode = getLanguageFromRequest(request.headers);
 
       // First try to find the set directly in the sets array
       let actualSet = getSetById(setId);
@@ -75,7 +87,11 @@ export const getSetHandlers = [
 
       return HttpResponse.json({
         data: {
-          getObject: convertSetToGraphQL(actualSet, 0), // Set is at depth 0 (root level)
+          getObject: convertSetToGraphQL({
+            airtableSet: actualSet,
+            currentDepth: 0,
+            languageCode,
+          }), // Set is at depth 0 (root level)
         },
       });
     }),
@@ -86,8 +102,9 @@ export const getSetHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_SET_FOR_RAIL", ({ variables }) => {
+    >("GET_SET_FOR_RAIL", ({ request, variables }) => {
       const setId = variables.uid || variables.externalId;
+      const languageCode = getLanguageFromRequest(request.headers);
 
       // First try to find the set directly in the sets array
       let actualSet = getSetById(setId);
@@ -109,7 +126,11 @@ export const getSetHandlers = [
 
       return HttpResponse.json({
         data: {
-          getObject: convertSetToGraphQL(actualSet, 0), // Set is at depth 0 (root level)
+          getObject: convertSetToGraphQL({
+            airtableSet: actualSet,
+            currentDepth: 0,
+            languageCode,
+          }), // Set is at depth 0 (root level)
         },
       });
     }),
@@ -119,8 +140,9 @@ export const getSetHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_PAGE_SET", ({ variables }) => {
+    >("GET_PAGE_SET", ({ request, variables }) => {
       const setId = variables.uid || variables.externalId;
+      const languageCode = getLanguageFromRequest(request.headers);
       console.log(`GET_PAGE_SET: Looking for page set with ID: ${setId}`);
 
       // First try to find the set directly in the sets array
@@ -138,7 +160,11 @@ export const getSetHandlers = [
       }
 
       // Use convertSetToGraphQL with depth limiting
-      const setGraphQL = convertSetToGraphQL(actualSet, 0); // Set is at depth 0 (root level)
+      const setGraphQL = convertSetToGraphQL({
+        airtableSet: actualSet,
+        currentDepth: 0,
+        languageCode,
+      }); // Set is at depth 0 (root level)
 
       return HttpResponse.json({
         data: {
@@ -152,8 +178,9 @@ export const getSetHandlers = [
     .query<
       object,
       { uid: string; externalId: string }
-    >("GET_COLLECTION_SET", ({ variables }) => {
+    >("GET_COLLECTION_SET", ({ request, variables }) => {
       const setId = variables.uid || variables.externalId;
+      const languageCode = getLanguageFromRequest(request.headers);
       console.log(
         `GET_COLLECTION_SET: Looking for collection set with ID: ${setId}`,
       );
@@ -174,7 +201,11 @@ export const getSetHandlers = [
 
       return HttpResponse.json({
         data: {
-          getObject: convertSetToGraphQL(actualSet, 0), // Set is at depth 0 (root level)
+          getObject: convertSetToGraphQL({
+            airtableSet: actualSet,
+            currentDepth: 0,
+            languageCode,
+          }), // Set is at depth 0 (root level)
         },
       });
     }),

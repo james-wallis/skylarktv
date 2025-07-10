@@ -193,6 +193,17 @@ export const mergeTranslatedContent = (
     "title_short",
     "synopsis",
     "synopsis_short",
+    // Call to action fields
+    "text",
+    "text_short",
+    "description",
+    "description_short",
+    "internal_title",
+    // Person/People fields
+    "name",
+    "bio_long",
+    "bio_medium",
+    "bio_short",
   ];
 
   const mergedFields = { ...mainFields };

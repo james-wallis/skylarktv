@@ -86,12 +86,18 @@ const getSetMetadata = (setId: string) => {
   return metadata;
 };
 
+// Options for convertSetToGraphQL function
+export interface ConvertSetToGraphQLOptions {
+  airtableSet: AirtableRecord<FieldSet>;
+  currentDepth?: number;
+  languageCode?: string;
+}
+
 // Convert Airtable set to GraphQL format with content
 export const convertSetToGraphQL = (
-  airtableSet: AirtableRecord<FieldSet>,
-  currentDepth: number = 0,
-  languageCode?: string,
+  options: ConvertSetToGraphQLOptions,
 ): object => {
+  const { airtableSet, currentDepth = 0, languageCode } = options;
   const { fields } = airtableSet;
 
   // Get metadata for this set (English language)
@@ -129,11 +135,11 @@ export const convertSetToGraphQL = (
               // This is a set reference, resolve it to the actual set
               const referencedSet = resolveSetReference(contentId);
               if (referencedSet) {
-                contentObj = convertSetToGraphQL(
-                  referencedSet,
-                  currentDepth + 1,
+                contentObj = convertSetToGraphQL({
+                  airtableSet: referencedSet,
+                  currentDepth: currentDepth + 1,
                   languageCode,
-                );
+                });
               }
             } else {
               // Otherwise try to find it directly as a media object
