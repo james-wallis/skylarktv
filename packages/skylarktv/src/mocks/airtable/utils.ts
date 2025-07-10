@@ -137,3 +137,22 @@ export const highlightSearchTerm = (
   const regex = new RegExp(`(${searchTerm})`, "gi");
   return textStr.replace(regex, '<span class="search-highlight">$1</span>');
 };
+
+// Normalize text for flexible searching (handles punctuation differences)
+export const normalizeSearchText = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(/[-_]/g, " ") // Replace hyphens and underscores with spaces
+    .replace(/[^\w\s]/g, "") // Remove other punctuation
+    .replace(/\s+/g, " ") // Normalize multiple spaces to single space
+    .trim();
+
+// Flexible search that handles punctuation differences
+export const flexibleTextMatch = (
+  text: string,
+  searchTerm: string,
+): boolean => {
+  const normalizedText = normalizeSearchText(text);
+  const normalizedSearch = normalizeSearchText(searchTerm);
+  return normalizedText.includes(normalizedSearch);
+};

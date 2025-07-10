@@ -6,22 +6,27 @@ import {
   assertSingleString,
   getImageUrl,
   highlightSearchTerm,
+  flexibleTextMatch,
 } from "./utils";
 
 // Search across all objects (media objects, articles, people)
 export const searchAllObjects = (query: string) => {
-  const searchTerm = query.toLowerCase();
   const results = [];
 
   // Search media objects (Movies, Episodes, Seasons, Brands, LiveStreams, etc.)
   const mediaResults = airtableData.mediaObjects
     .filter((obj) => {
       const { fields } = obj;
+      const title = assertString(fields.title) || "";
+      const titleShort = assertString(fields.title_short) || "";
+      const synopsis = assertString(fields.synopsis) || "";
+      const synopsisShort = assertString(fields.synopsis_short) || "";
+
       return (
-        assertString(fields.title)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.title_short)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.synopsis)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.synopsis_short)?.toLowerCase().includes(searchTerm)
+        flexibleTextMatch(title, query) ||
+        flexibleTextMatch(titleShort, query) ||
+        flexibleTextMatch(synopsis, query) ||
+        flexibleTextMatch(synopsisShort, query)
       );
     })
     .map((obj) => {
@@ -45,10 +50,14 @@ export const searchAllObjects = (query: string) => {
   const articleResults = (airtableData.articles || [])
     .filter((article) => {
       const { fields } = article;
+      const title = assertString(fields.title) || "";
+      const description = assertString(fields.description) || "";
+      const body = assertString(fields.body) || "";
+
       return (
-        assertString(fields.title)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.description)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.body)?.toLowerCase().includes(searchTerm)
+        flexibleTextMatch(title, query) ||
+        flexibleTextMatch(description, query) ||
+        flexibleTextMatch(body, query)
       );
     })
     .map((article) => {
@@ -94,11 +103,16 @@ export const searchAllObjects = (query: string) => {
   const peopleResults = (airtableData.people || [])
     .filter((person) => {
       const { fields } = person;
+      const name = assertString(fields.name) || "";
+      const bioLong = assertString(fields.bio_long) || "";
+      const bioMedium = assertString(fields.bio_medium) || "";
+      const bioShort = assertString(fields.bio_short) || "";
+
       return (
-        assertString(fields.name)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.bio_long)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.bio_medium)?.toLowerCase().includes(searchTerm) ||
-        assertString(fields.bio_short)?.toLowerCase().includes(searchTerm)
+        flexibleTextMatch(name, query) ||
+        flexibleTextMatch(bioLong, query) ||
+        flexibleTextMatch(bioMedium, query) ||
+        flexibleTextMatch(bioShort, query)
       );
     })
     .map((person) => {

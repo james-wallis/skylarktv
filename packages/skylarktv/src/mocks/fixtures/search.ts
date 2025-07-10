@@ -14,10 +14,21 @@ export const searchHandlers = [
 
         const searchResults = searchAllObjects(query);
 
+        const limitedResults = searchResults.slice(0, limit);
+
+        // Add _context field for UI highlighting
+        const resultsWithContext = limitedResults.map((result) => ({
+          ...result,
+          _context: {
+            typename_highlight: result.__typename,
+          },
+        }));
+
         return HttpResponse.json({
           data: {
             search: {
-              results: searchResults.slice(0, limit),
+              total_count: searchResults.length,
+              objects: resultsWithContext,
             },
           },
         });
