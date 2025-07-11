@@ -4,6 +4,7 @@ import {
   searchAllObjects,
   extractRequestContext,
   createGraphQLResponse,
+  highlightSearchTerm,
 } from "../airtableData";
 
 export const searchHandlers = [
@@ -37,7 +38,7 @@ export const searchHandlers = [
         const resultsWithContext = limitedResults.map((result) => ({
           ...result,
           _context: {
-            typename_highlight: result.__typename,
+            typename_highlight: highlightSearchTerm(result.__typename, query),
           },
         }));
 

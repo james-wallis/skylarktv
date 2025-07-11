@@ -18,15 +18,26 @@ import { configureSegment, segment } from "../lib/segment";
 import { SEGMENT_WRITE_KEY, AMPLITUDE_API_KEY } from "../constants/env";
 
 // Initialize MSW
+let mockingEnabled = false;
 async function enableMocking() {
-  if (process.env.NEXT_PUBLIC_USE_MSW === "true") {
+  if (process.env.NEXT_PUBLIC_USE_MSW === "true" && !mockingEnabled) {
+    if (mockingEnabled) {
+      // eslint-disable-next-line no-console
+      console.log("Attempted to enable mocking again...");
+    }
+
     const { initMocks } = await import("../mocks");
 
+    mockingEnabled = true;
     await initMocks();
   }
 }
 
-void enableMocking();
+void enableMocking()
+  // eslint-disable-next-line no-console
+  .then(() => console.log("[initMocks] Mocking enabled"))
+  // eslint-disable-next-line no-console
+  .catch((err) => console.log("[initMocks] Error enabling mocks", err));
 
 const IntercomWrapper = ({ children }: { children: ReactNode }) =>
   CLIENT_APP_CONFIG.withIntercom ? (

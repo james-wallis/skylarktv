@@ -22,9 +22,15 @@ export const searchAllObjects = (
 ) => {
   const results = [];
 
-  // Search media objects (Movies, Episodes, Seasons, Brands, LiveStreams, etc.)
+  // Search media objects (Movies, Episodes, Brands, LiveStreams, etc. - excluding Seasons)
   const mediaResults = airtableData.mediaObjects
     .filter((obj) => {
+      // Exclude Seasons from search results
+      const objectType = obj.fields.skylark_object_type;
+      if (objectType === "Season" || objectType === "seasons") {
+        return false;
+      }
+
       const { fields } = obj;
       const title = assertString(fields.title) || "";
       const titleShort = assertString(fields.title_short) || "";

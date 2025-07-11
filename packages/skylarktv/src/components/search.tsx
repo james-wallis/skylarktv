@@ -319,6 +319,27 @@ export const Search = ({ onSearch }: { onSearch?: () => void }) => {
                   );
                 }
 
+                if (typename === "Article") {
+                  return (
+                    <SearchResultItem
+                      date={(obj.publish_date as string) || ""}
+                      description={findMatchOrReturnFirst([
+                        obj.description,
+                        obj.body,
+                      ])}
+                      href={href}
+                      image={getGraphQLImageSrc(
+                        obj?.images,
+                        ImageType.Thumbnail,
+                      )}
+                      key={obj.uid}
+                      title={findMatchOrReturnFirst([obj.title])}
+                      typename={highlightedTypename}
+                      onClick={onSearchWrapper}
+                    />
+                  );
+                }
+
                 return null;
               })}
           </div>

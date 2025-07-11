@@ -9,6 +9,7 @@ import {
   SkylarkTVSupportedSetType,
   GQLError,
   LiveStream,
+  Article,
 } from "../types";
 import { SEARCH } from "../graphql/queries";
 import { skylarkRequestWithDimensions } from "../lib/utils";
@@ -16,7 +17,15 @@ import { useDimensions } from "../contexts";
 import { Dimensions } from "../lib/interfaces";
 
 interface SearchResult extends Omit<SearchResultListing, "objects"> {
-  objects: (SkylarkSet | Brand | Episode | Movie | Person | LiveStream)[];
+  objects: (
+    | SkylarkSet
+    | Brand
+    | Episode
+    | Movie
+    | Person
+    | LiveStream
+    | Article
+  )[];
 }
 
 const fetcher = (query: string, dimensions: Dimensions) =>
