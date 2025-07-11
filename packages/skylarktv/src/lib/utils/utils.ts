@@ -586,7 +586,7 @@ export const useNonSkylarkEntertainmentModelProperty = <T>(
   defaultValue?: T,
 ) => {
   if (metadata && hasProperty(metadata, property)) {
-    return metadata.property as T;
+    return metadata[property] as T;
   }
 
   return defaultValue;

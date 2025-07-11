@@ -26,6 +26,7 @@ import {
   Article,
   Availability,
   CallToAction,
+  SkylarkTVAdditionalFields,
 } from "../../types";
 import {
   airtableData,
@@ -299,6 +300,10 @@ export const parseMovie = (options: MediaObjectParseOptions): Movie | null => {
   return {
     ...baseObject,
     __typename: "Movie",
+    [SkylarkTVAdditionalFields.Budget]: assertNumber(baseObject.fields.budget),
+    [SkylarkTVAdditionalFields.AudienceRating]: assertNumber(
+      baseObject.fields.audience_rating,
+    ),
     assets: { objects: [] }, // Would need asset data
     brands: { objects: [] }, // Would need to link parent brands
   };
@@ -315,6 +320,9 @@ export const parseEpisode = (
     ...baseObject,
     __typename: "Episode",
     episode_number: assertNumber(baseObject.fields.episode_number),
+    [SkylarkTVAdditionalFields.AudienceRating]: assertNumber(
+      baseObject.fields.audience_rating,
+    ),
     assets: { objects: [] }, // Would need asset data
     brands: { objects: [] }, // Would need to link parent brands
   };
@@ -331,6 +339,9 @@ export const parseSeason = (
     ...baseObject,
     __typename: "Season",
     season_number: assertNumber(baseObject.fields.season_number),
+    [SkylarkTVAdditionalFields.PreferredImageType]: assertString(
+      baseObject.fields.preferred_image_type,
+    ),
   };
 };
 
