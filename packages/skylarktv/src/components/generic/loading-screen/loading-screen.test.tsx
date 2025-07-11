@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "../../../../test-utils";
 import { LoadingScreen } from "./loading-screen.component";
+import englishTranslations from "../../../../locales/en-gb/common.json";
 
 const title = "SkylarkTV";
 
@@ -13,6 +14,6 @@ describe("LoadingScreen component", () => {
         (title.match(new RegExp(char, "g")) || []).length,
       );
     }
-    expect(screen.getByText("By Skylark")).toBeTruthy();
+    expect(screen.getByText(englishTranslations["by-skylark"])).toBeTruthy();
   });
 });

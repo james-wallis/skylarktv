@@ -7,6 +7,7 @@ import {
 } from "../../../../test-utils";
 import { DimensionSettings } from "./dimension-settings.component";
 import { DimensionsContextProvider } from "../../../contexts";
+import { CLIENT_APP_CONFIG } from "../../../constants/app";
 
 const customRender = (ui: React.ReactElement, renderOptions?: RenderOptions) =>
   render(
@@ -22,12 +23,12 @@ const getCheckBox = (label: string): HTMLInputElement =>
 describe("Dimension Settings component", () => {
   it("the dimension settings component renders correctly when closed", () => {
     customRender(<DimensionSettings />);
-    expect(screen.queryByText(/hello@skylarkplatform.com/)).toBeFalsy();
+    expect(screen.queryByText(CLIENT_APP_CONFIG.contactEmail)).toBeFalsy();
   });
 
   it("the dimension settings component renders correctly when open", () => {
     customRender(<DimensionSettings show />);
-    expect(screen.getByText(/hello@skylarkplatform.com/)).toBeTruthy();
+    expect(screen.getByText(CLIENT_APP_CONFIG.contactEmail)).toBeTruthy();
   });
 
   it("should change the active dimension language", () => {

@@ -41,6 +41,7 @@ const defaultAppConfig: {
     hideAppName: boolean;
   };
   placeholderVideo: string;
+  contactEmail: string;
 } = {
   name: "SkylarkTV",
   colours: {
@@ -77,6 +78,7 @@ const defaultAppConfig: {
     },
   },
   placeholderVideo: "/mux-video-intro.mp4",
+  contactEmail: "j@wallis.dev",
 };
 
 export const CLIENT_APP_CONFIG: typeof defaultAppConfig = {

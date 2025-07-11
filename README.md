@@ -36,6 +36,10 @@ yarn dev
 
 From the root directory run `yarn test`
 
+## Configuration
+
+StreamTV settings can be customized in `packages/skylarktv/src/constants/app.ts`
+
 [skylark]: https://www.skylarkplatform.com/
 [environment-variables]: ./docs/environment-variables.md
 [storybook]: https://main--63219df2e93c0d4a4ed861cf.chromatic.com/

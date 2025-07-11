@@ -120,13 +120,11 @@ export const DimensionSettings: React.FC<DimensionSettingsProps> = ({
                   <p className="hidden text-gray-400 md:block">{`Get in touch:`}</p>
                   <a
                     className="text-skylark-blue md:pl-1"
-                    href={
-                      "mailto:hello@skylarkplatform.com?subject=Enquiry from SkylarkTV"
-                    }
+                    href={`mailto:${CLIENT_APP_CONFIG.contactEmail}?subject=Enquiry from ${CLIENT_APP_CONFIG.name}`}
                     rel="noreferrer"
                     target="_blank"
                   >
-                    {"hello@skylarkplatform.com"}
+                    {CLIENT_APP_CONFIG.contactEmail}
                   </a>
                 </div>
               </div>
