@@ -6,6 +6,7 @@ import {
   createGraphQLResponse,
   createGraphQLListResponse,
   findObjectByUidOrExternalId,
+  sortByProperty,
 } from "../airtableData";
 import { parseArticle } from "../airtable/parse-media-objects";
 
@@ -60,7 +61,15 @@ export const getArticleHandlers = [
         (article): article is NonNullable<typeof article> => article !== null,
       );
 
-    return createGraphQLListResponse(articles, "listObjects");
+    // Sort articles by publish_date in descending order (newest first)
+    const sortedArticles = sortByProperty(
+      articles as Record<string, unknown>[],
+      "publish_date",
+      undefined,
+      "desc",
+    );
+
+    return createGraphQLListResponse(sortedArticles, "listObjects");
   }),
 
   graphql
