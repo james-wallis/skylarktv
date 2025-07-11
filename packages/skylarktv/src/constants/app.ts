@@ -25,6 +25,7 @@ const defaultAppConfig: {
   withIntercom: boolean;
   withSegment: boolean;
   hideDimensionsSettings: boolean;
+  disableConnectToExternalSkylark: boolean;
   defaultLanguage?: string;
   header?: {
     logo: {
@@ -52,6 +53,7 @@ const defaultAppConfig: {
   withIntercom: false,
   withSegment: false,
   hideDimensionsSettings: false,
+  disableConnectToExternalSkylark: true,
   dimensions: {
     [DimensionKey.CustomerType]: {
       values: [

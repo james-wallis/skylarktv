@@ -128,24 +128,26 @@ export const DimensionSettings: React.FC<DimensionSettingsProps> = ({
                   </a>
                 </div>
               </div>
-              <div className="flex items-center justify-start">
-                <p className="text-sm font-medium">
-                  {skylarkApiUrl
-                    ? `Connected: ${
-                        skylarkApiUrl.includes("skylarkplatform.io") ||
-                        skylarkApiUrl.includes("skylarkplatform.com")
-                          ? skylarkApiUrl.split(".")[1]
-                          : skylarkApiUrl
-                      }.`
-                    : "Not connected."}
-                </p>
-                <button
-                  className="ml-1.5 rounded-full text-sm font-medium text-skylark-blue hover:text-blue-600"
-                  onClick={() => setModalOpen(true)}
-                >
-                  {"Change"}
-                </button>
-              </div>
+              {!CLIENT_APP_CONFIG.disableConnectToExternalSkylark && (
+                <div className="flex items-center justify-start">
+                  <p className="text-sm font-medium">
+                    {skylarkApiUrl
+                      ? `Connected: ${
+                          skylarkApiUrl.includes("skylarkplatform.io") ||
+                          skylarkApiUrl.includes("skylarkplatform.com")
+                            ? skylarkApiUrl.split(".")[1]
+                            : skylarkApiUrl
+                        }.`
+                      : "Not connected."}
+                  </p>
+                  <button
+                    className="ml-1.5 rounded-full text-sm font-medium text-skylark-blue hover:text-blue-600"
+                    onClick={() => setModalOpen(true)}
+                  >
+                    {"Change"}
+                  </button>
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-8 pt-5 md:grid-cols-2 md:pt-8 lg:grid-cols-4">
                 <DimensionContent label="Customer Type">
                   <DimensionRadioButton
@@ -219,10 +221,12 @@ export const DimensionSettings: React.FC<DimensionSettingsProps> = ({
             </div>
           </motion.div>
         )}
-        <ConnectToSkylarkModal
-          closeModal={() => setModalOpen(false)}
-          isOpen={modalOpen}
-        />
+        {!CLIENT_APP_CONFIG.disableConnectToExternalSkylark && (
+          <ConnectToSkylarkModal
+            closeModal={() => setModalOpen(false)}
+            isOpen={modalOpen}
+          />
+        )}
       </AnimatePresence>
     </>
   );

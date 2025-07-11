@@ -21,7 +21,6 @@ import {
 import { AppBackgroundGradient } from "./generic/app-background-gradient";
 import { AppHeader } from "./generic/app-header";
 import { Button } from "./generic/button";
-import { ConnectToSkylarkModal } from "./generic/connect-to-skylark-modal";
 import { TitleScreen } from "./generic/title-screen";
 import { Link } from "./generic/link";
 import { CLIENT_APP_CONFIG } from "../constants/app";
@@ -89,8 +88,6 @@ export const SkylarkTVLayout: React.FC<Props> = ({
       ...rest,
     }),
   );
-
-  const [modalOpen, setModalOpen] = useState(false);
 
   const skipTitleScreen = hasProperty(query, "skipTitleScreen");
 
@@ -232,10 +229,6 @@ export const SkylarkTVLayout: React.FC<Props> = ({
             />
           )}
       </div>
-      <ConnectToSkylarkModal
-        closeModal={() => setModalOpen(false)}
-        isOpen={modalOpen}
-      />
     </>
   );
 };
