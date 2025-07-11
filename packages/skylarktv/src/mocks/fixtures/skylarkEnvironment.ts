@@ -1,5 +1,6 @@
-import { graphql, HttpResponse } from "msw";
+import { graphql } from "msw";
 import { SAAS_API_ENDPOINT } from "../../constants/env";
+import { createGraphQLResponse } from "../airtableData";
 
 // Mock Skylark Environment
 const mockSkylarkEnvironment = {

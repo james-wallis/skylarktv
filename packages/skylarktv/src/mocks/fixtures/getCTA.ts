@@ -1,6 +1,6 @@
 import { graphql, HttpResponse } from "msw";
 import { SAAS_API_ENDPOINT } from "../../constants/env";
-import { airtableData } from "../airtableData";
+import { airtableData, findObjectByUidOrExternalId } from "../airtableData";
 
 export const getCTAHandlers = [
   graphql
@@ -9,9 +9,9 @@ export const getCTAHandlers = [
       object,
       { uid: string; externalId: string }
     >("GET_CTA", ({ variables }) => {
-      const ctaId = variables.uid || variables.externalId;
-      const cta = airtableData.callToActions?.find(
-        (c) => c.id === ctaId || c.fields.external_id === ctaId,
+      const cta = findObjectByUidOrExternalId(
+        airtableData.callToActions || [],
+        variables,
       );
 
       if (!cta) {

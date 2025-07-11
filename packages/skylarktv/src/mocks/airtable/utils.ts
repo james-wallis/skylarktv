@@ -263,3 +263,15 @@ export const sortByProperty = <T extends object>(
 export const sortByTitle = <T extends { title_sort?: string; title?: string }>(
   objects: T[],
 ): T[] => sortByProperty(objects, "title_sort", "title");
+
+// Generic object lookup function for uid/externalId matching
+export const findObjectByUidOrExternalId = <T extends AirtableRecord<FieldSet>>(
+  collection: T[],
+  variables: { uid?: string; externalId?: string },
+): T | undefined =>
+  collection.find(
+    (obj) =>
+      obj.id === variables.uid ||
+      obj.id === variables.externalId ||
+      obj.fields.external_id === variables.externalId,
+  );

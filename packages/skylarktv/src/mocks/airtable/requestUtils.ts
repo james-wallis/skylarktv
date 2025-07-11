@@ -50,8 +50,16 @@ export const getTimeTravelFromRequest = (headers: Headers): Date | null => {
   }
 };
 
-// Could add more request utilities here in the future:
-// - getUserFromRequest
-// - getDeviceFromRequest
-// - getRegionFromRequest
-// etc.
+// Request context interface for consolidated header extraction
+export interface RequestContext {
+  languageCode: string;
+  requestedDimensions: AvailabilityDimensions;
+  timeTravelDate: Date | null;
+}
+
+// Extract all common request context from headers in one call
+export const extractRequestContext = (headers: Headers): RequestContext => ({
+  languageCode: getLanguageFromRequest(headers),
+  requestedDimensions: getAvailabilityDimensionsFromRequest(headers),
+  timeTravelDate: getTimeTravelFromRequest(headers),
+});

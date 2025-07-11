@@ -1,10 +1,9 @@
-import { graphql, HttpResponse } from "msw";
+import { graphql } from "msw";
 import { SAAS_API_ENDPOINT } from "../../constants/env";
 import {
   searchAllObjects,
-  getLanguageFromRequest,
-  getAvailabilityDimensionsFromRequest,
-  getTimeTravelFromRequest,
+  extractRequestContext,
+  createGraphQLResponse,
 } from "../airtableData";
 
 export const searchHandlers = [
@@ -22,11 +21,8 @@ export const searchHandlers = [
       }) => {
         const query = variables.query || "";
         const limit = variables.limit || 20;
-        const languageCode = getLanguageFromRequest(request.headers);
-        const requestedDimensions = getAvailabilityDimensionsFromRequest(
-          request.headers,
-        );
-        const timeTravelDate = getTimeTravelFromRequest(request.headers);
+        const { languageCode, requestedDimensions, timeTravelDate } =
+          extractRequestContext(request.headers);
 
         const searchResults = searchAllObjects(
           query,
@@ -45,14 +41,13 @@ export const searchHandlers = [
           },
         }));
 
-        return HttpResponse.json({
-          data: {
-            search: {
-              total_count: searchResults.length,
-              objects: resultsWithContext,
-            },
+        return createGraphQLResponse(
+          {
+            total_count: searchResults.length,
+            objects: resultsWithContext,
           },
-        });
+          "search",
+        );
       },
     ),
 ];

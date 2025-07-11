@@ -1,5 +1,6 @@
 import { Airtables } from "../../types/airtable";
 import airtableDataRaw from "../skylark_airtable_data.json";
+import { findObjectByUidOrExternalId } from "./utils";
 
 // Type the imported data - we use type assertion because JSON doesn't include Airtable Record methods
 export const airtableData = (airtableDataRaw as { airtable_data: unknown })
@@ -55,11 +56,10 @@ export const getMediaObjectByUidOrExternalId = (
 // Get set by ID or external ID
 export const getSetById = (id: string) => {
   const sets = airtableData.sets || [];
+  const variables = { uid: id, externalId: id };
 
   // First try to find in the dedicated sets array
-  let foundSet = sets.find(
-    (s) => s.id === id || s.fields.external_id === id || s.fields.slug === id,
-  );
+  let foundSet = findObjectByUidOrExternalId(sets, variables);
 
   // If not found, check in mediaObjects for SkylarkSet type
   if (!foundSet) {

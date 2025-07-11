@@ -20,3 +20,12 @@ export * from "./sets";
 
 // Search functionality
 export * from "./search";
+
+// GraphQL utilities
+export * from "./graphqlUtils";
+
+// Media object utilities
+export * from "./mediaObjectUtils";
+
+// Set utilities
+export * from "./setUtils";

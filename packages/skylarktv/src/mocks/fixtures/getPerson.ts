@@ -7,13 +7,15 @@ import {
   assertStringArray,
   assertSingleString,
   convertMediaObjectToGraphQL,
+  findObjectByUidOrExternalId,
 } from "../airtableData";
 
 export const getPersonHandlers = [
   // Handle Person queries
   graphql.link(SAAS_API_ENDPOINT).query("GET_PERSON", ({ variables }) => {
-    const person = airtableData.people?.find(
-      (p) => p.id === variables.uid || p.id === variables.externalId,
+    const person = findObjectByUidOrExternalId(
+      airtableData.people || [],
+      variables,
     );
 
     if (!person) {

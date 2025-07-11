@@ -14,6 +14,35 @@ import {
 } from "./availability";
 import { parseCallToAction, parseImage } from "./parse-metadata-objects";
 
+// Helper function to resolve a set reference to the actual set
+export const resolveSetReference = (setReferenceId: string) => {
+  // First, find the media object that represents this set reference
+  const setReference = airtableData.mediaObjects?.find(
+    (obj) => obj.id === setReferenceId,
+  );
+
+  // Use the skylarkset_external_id field to find the matching set
+  const skylarksetExternalId = setReference?.fields.skylarkset_external_id;
+
+  // Find the actual set by matching skylarkset_external_id to external_id
+  const actualSet =
+    skylarksetExternalId &&
+    airtableData.sets?.find(
+      (set) => set.fields.external_id === skylarksetExternalId,
+    );
+
+  return actualSet;
+};
+
+// Resolve set with fallback to set references
+export const resolveSetWithFallback = (setId: string) => {
+  let actualSet = getSetById(setId);
+  if (!actualSet) {
+    actualSet = resolveSetReference(setId) || undefined;
+  }
+  return actualSet || null;
+};
+
 export const getSetContent = (set: AirtableRecord<FieldSet>): string[] => {
   // First try the content field
   if (set.fields.content && Array.isArray(set.fields.content)) {
@@ -37,26 +66,6 @@ export const getSetContent = (set: AirtableRecord<FieldSet>): string[] => {
   }
 
   return [];
-};
-
-// Helper function to resolve a set reference to the actual set
-export const resolveSetReference = (setReferenceId: string) => {
-  // First, find the media object that represents this set reference
-  const setReference = airtableData.mediaObjects?.find(
-    (obj) => obj.id === setReferenceId,
-  );
-
-  // Use the skylarkset_external_id field to find the matching set
-  const skylarksetExternalId = setReference?.fields.skylarkset_external_id;
-
-  // Find the actual set by matching skylarkset_external_id to external_id
-  const actualSet =
-    skylarksetExternalId &&
-    airtableData.sets?.find(
-      (set) => set.fields.external_id === skylarksetExternalId,
-    );
-
-  return actualSet;
 };
 
 // Helper function to get set metadata for a given set ID
