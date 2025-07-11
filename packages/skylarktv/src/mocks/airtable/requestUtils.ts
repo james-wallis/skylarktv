@@ -37,6 +37,19 @@ export const getAvailabilityDimensionsFromRequest = (
   };
 };
 
+export const getTimeTravelFromRequest = (headers: Headers): Date | null => {
+  const timeTravel = headers.get("x-time-travel");
+  if (!timeTravel || timeTravel.trim() === "") {
+    return null;
+  }
+
+  try {
+    return new Date(timeTravel);
+  } catch {
+    return null;
+  }
+};
+
 // Could add more request utilities here in the future:
 // - getUserFromRequest
 // - getDeviceFromRequest

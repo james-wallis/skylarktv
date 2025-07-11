@@ -23,6 +23,7 @@ import {
   Season,
   Brand,
   LiveStream,
+  Article,
   Availability,
   CallToAction,
 } from "../../types";
@@ -54,6 +55,7 @@ export interface MediaObjectParseOptions {
   currentDepth?: number;
   languageCode?: string;
   requestedDimensions?: AvailabilityDimensions;
+  timeTravelDate?: Date | null;
 }
 
 // Base media object parser - handles all common fields and processing
@@ -63,6 +65,7 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
     currentDepth = 0,
     languageCode,
     requestedDimensions,
+    timeTravelDate,
   } = options;
 
   if (!airtableObj || !airtableObj.fields) {
@@ -229,6 +232,7 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
       contentAvailabilityIds,
       requestedDimensions,
       airtableData,
+      timeTravelDate,
     );
 
     // If no access, return null to filter out this content
@@ -351,5 +355,112 @@ export const parseLiveStream = (
   return {
     ...baseObject,
     __typename: "LiveStream",
+  };
+};
+
+// Article parsing utility
+export const parseArticle = (
+  options: MediaObjectParseOptions,
+): Article | null => {
+  const {
+    airtableObj,
+    currentDepth = 0,
+    languageCode,
+    requestedDimensions,
+    timeTravelDate,
+  } = options;
+
+  if (!airtableObj || !airtableObj.fields) {
+    return null;
+  }
+
+  // Check if we've reached maximum depth
+  if (currentDepth >= DEPTH_LIMIT_CONFIG.MAX_DEPTH) {
+    return null;
+  }
+
+  // Apply translations if language code is provided
+  let { fields } = airtableObj;
+  if (languageCode && languageCode !== "en-GB") {
+    const translation = findTranslationForObject(
+      airtableObj.id,
+      languageCode,
+      airtableData.translations?.articles || [],
+    );
+
+    if (translation) {
+      fields = mergeTranslatedContent(airtableObj.fields, translation.fields);
+    }
+  }
+
+  // Check availability if dimensions are requested
+  if (requestedDimensions) {
+    const articleAvailabilityIds = assertStringArray(fields.availability) || [];
+    const hasAccess = filterContentByAvailability(
+      articleAvailabilityIds,
+      requestedDimensions,
+      airtableData,
+      timeTravelDate,
+    );
+
+    if (!hasAccess) {
+      return null;
+    }
+  }
+
+  // Get related objects (images, credits, tags)
+  const imageIds = fields.images
+    ? assertStringArray(
+        Array.isArray(fields.images) ? fields.images : [fields.images],
+      )
+    : null;
+  const images = imageIds
+    ? imageIds
+        .map((imgId: string) => {
+          const img = getImageById(imgId);
+          return parseImage(img);
+        })
+        .filter(Boolean)
+    : [];
+
+  // Process availability records if requested dimensions are provided
+  let availabilityObjects: Availability[] = [];
+  const hasDimensionsRequested =
+    requestedDimensions &&
+    ((requestedDimensions.customerTypes &&
+      requestedDimensions.customerTypes.length > 0) ||
+      (requestedDimensions.deviceTypes &&
+        requestedDimensions.deviceTypes.length > 0) ||
+      (requestedDimensions.regions && requestedDimensions.regions.length > 0));
+
+  if (hasDimensionsRequested) {
+    const contentAvailabilityIds = assertStringArray(fields.availability) || [];
+    const tempAvailabilityObjects = contentAvailabilityIds
+      .map((availId) => {
+        const availRecord = airtableData.availability?.find(
+          (avail) => avail.id === availId,
+        );
+        if (!availRecord) return null;
+        return parseAvailability(availRecord);
+      })
+      .filter((avail): avail is Availability => !!avail);
+    availabilityObjects = tempAvailabilityObjects;
+  }
+
+  return {
+    __typename: "Article",
+    uid: airtableObj.id,
+    external_id: assertString(fields.external_id) || airtableObj.id,
+    slug: assertString(fields.slug),
+    title: assertString(fields.title),
+    description: assertString(fields.description),
+    body: assertString(fields.body),
+    type: assertString(fields.type),
+    publish_date: assertString(fields.publish_date),
+    internal_title: assertString(fields.internal_title),
+    images: { objects: images },
+    availability: { objects: availabilityObjects },
+    credits: { objects: [] }, // Would need credit relationships
+    tags: { objects: [] }, // Would need tag relationships
   };
 };

@@ -8,13 +8,17 @@ import {
   highlightSearchTerm,
   flexibleTextMatch,
 } from "./utils";
-import type { AvailabilityDimensions } from "./availability";
+import {
+  filterContentByAvailability,
+  AvailabilityDimensions,
+} from "./availability";
 
 // Search across all objects (media objects, articles, people)
 export const searchAllObjects = (
   query: string,
   languageCode?: string,
   requestedDimensions?: AvailabilityDimensions,
+  timeTravelDate?: Date | null,
 ) => {
   const results = [];
 
@@ -40,6 +44,7 @@ export const searchAllObjects = (
         currentDepth: 0,
         languageCode,
         requestedDimensions,
+        timeTravelDate,
       }); // Search results are at depth 0 (root level)
       if (!converted) return null;
 
@@ -64,11 +69,27 @@ export const searchAllObjects = (
       const description = assertString(fields.description) || "";
       const body = assertString(fields.body) || "";
 
-      return (
+      // First check text matching
+      const matchesSearch =
         flexibleTextMatch(title, query) ||
         flexibleTextMatch(description, query) ||
-        flexibleTextMatch(body, query)
-      );
+        flexibleTextMatch(body, query);
+
+      if (!matchesSearch) return false;
+
+      // Then check availability if dimensions are requested
+      if (requestedDimensions) {
+        const articleAvailabilityIds =
+          assertStringArray(fields.availability) || [];
+        return filterContentByAvailability(
+          articleAvailabilityIds,
+          requestedDimensions,
+          airtableData,
+          timeTravelDate,
+        );
+      }
+
+      return true;
     })
     .map((article) => {
       // Get article images

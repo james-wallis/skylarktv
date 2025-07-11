@@ -62,21 +62,32 @@ const computeDynamicDates = (availabilityRecord: AirtableRecord<FieldSet>) => {
 // Helper function to check if availability is currently active based on time constraints
 const isAvailabilityTimeActive = (
   availabilityRecord: AirtableRecord<FieldSet>,
+  timeTravelDate?: Date | null,
 ): boolean => {
   const { starts, ends } = computeDynamicDates(availabilityRecord);
-  const now = new Date();
+  const now = timeTravelDate || new Date();
 
-  // Check start time constraint
-  if (starts && now < starts) {
-    return false; // Not yet active
+  // If no time constraints at all, always available
+  if (!starts && !ends) {
+    return true;
   }
 
-  // Check end time constraint
-  if (ends && now >= ends) {
-    return false; // No longer active
+  // If only start time is defined
+  if (starts && !ends) {
+    return now >= starts; // Available if start time has passed
   }
 
-  return true; // Currently active
+  // If only end time is defined
+  if (!starts && ends) {
+    return now < ends; // Available if end time hasn't passed yet
+  }
+
+  // If both start and end times are defined
+  if (starts && ends) {
+    return now >= starts && now < ends; // Available if within the time window
+  }
+
+  return true; // Fallback to available (shouldn't reach here)
 };
 
 // Availability support functions
@@ -84,9 +95,10 @@ export const checkAvailabilityMatch = (
   availabilityRecord: AirtableRecord<FieldSet>,
   requestedDimensions: AvailabilityDimensions,
   airtableData: Airtables,
+  timeTravelDate?: Date | null,
 ): boolean => {
   // First check if this availability is currently time-active
-  if (!isAvailabilityTimeActive(availabilityRecord)) {
+  if (!isAvailabilityTimeActive(availabilityRecord, timeTravelDate)) {
     return false;
   }
 
@@ -195,6 +207,7 @@ export const filterContentByAvailability = (
   contentAvailabilityIds: string[],
   requestedDimensions: AvailabilityDimensions,
   airtableData: Airtables,
+  timeTravelDate?: Date | null,
 ): boolean => {
   let availabilityIdsToCheck = contentAvailabilityIds;
 
@@ -223,6 +236,7 @@ export const filterContentByAvailability = (
       availabilityRecord,
       requestedDimensions,
       airtableData,
+      timeTravelDate,
     );
   });
 

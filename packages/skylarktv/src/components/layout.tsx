@@ -116,8 +116,8 @@ export const SkylarkTVLayout: React.FC<Props> = ({
 
   const { permissions } = useUser();
 
-  const includeDimensionSettings =
-    !permissions || permissions.length > 1 || true; // TODO fix the user request so that dimension settings works (the response is wrong atm)
+  // If permissions length is greater than 1, it'll have more than readonly
+  const includeDimensionSettings = !permissions || permissions.length > 1;
 
   return (
     <>

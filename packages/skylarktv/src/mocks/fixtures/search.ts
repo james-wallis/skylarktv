@@ -4,6 +4,7 @@ import {
   searchAllObjects,
   getLanguageFromRequest,
   getAvailabilityDimensionsFromRequest,
+  getTimeTravelFromRequest,
 } from "../airtableData";
 
 export const searchHandlers = [
@@ -25,11 +26,13 @@ export const searchHandlers = [
         const requestedDimensions = getAvailabilityDimensionsFromRequest(
           request.headers,
         );
+        const timeTravelDate = getTimeTravelFromRequest(request.headers);
 
         const searchResults = searchAllObjects(
           query,
           languageCode,
           requestedDimensions,
+          timeTravelDate,
         );
 
         const limitedResults = searchResults.slice(0, limit);
