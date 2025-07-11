@@ -11,11 +11,14 @@
     "test": "jest --config=jest.config.js",
     "tsc": "tsc",
     "codegen": "DOTENV_CONFIG_PATH=.env.local graphql-codegen -r dotenv/config --config codegen.ts",
-    "prebuild": "yarn codegen",
-    "predev": "yarn codegen",
-    "prestorybook": "ONLY_GENERATE_CSS_FILE=true yarn codegen",
-    "prebuild-storybook": "ONLY_GENERATE_CSS_FILE=true yarn codegen",
+    "codegen:css-only": "ONLY_GENERATE_CSS_FILE=true yarn codegen",
+    "prebuild": "yarn codegen:css-only",
+    "predev": "yarn codegen:css-only",
+    "prestorybook": "yarn codegen:css-only",
+    "prebuild-storybook": "yarn codegen:css-only",
     "ingest": "cd ../../packages/ingestor && yarn ingest:saas:with-sets",
+    "mock-data:update": "cp ../ingestor/outputs/airtable/$(ls -t ../ingestor/outputs/airtable/*.json | head -1 | xargs basename) ./src/mocks/skylark_airtable_data.json && echo \"Updated to latest Airtable data: $(ls -t ../ingestor/outputs/airtable/*.json | head -1 | xargs basename)\"",
+    "mock-data:fetch": "cd ../ingestor && yarn ingest:airtable-export && cd ../skylarktv && yarn mock-data:update",
     "vercel:link": "vercel link -p skylarktv --scope skylark-platform --yes",
     "vercel:env": "vercel env pull .env.local --yes",
     "storybook": "storybook dev -p 6006",
@@ -40,6 +43,7 @@
     "graphql-request": "6.1.0",
     "json-to-graphql-query": "2.3.0",
     "motion": "12.0.0-alpha.2",
+    "msw": "^2.10.3",
     "next": "15.1.0",
     "next-password-protect": "1.8.0",
     "next-plausible": "3.12.4",
@@ -79,6 +83,7 @@
     "@types/react": "19.0.1",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
+    "airtable": "0.12.2",
     "autoprefixer": "10.4.20",
     "jest": "29.7.0",
     "jest-environment-jsdom": "29.7.0",
@@ -91,5 +96,10 @@
     "storybook": "8.4.7",
     "tailwindcss": "3.4.16",
     "typescript": "5.7.2"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

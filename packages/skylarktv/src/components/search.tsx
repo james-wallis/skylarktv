@@ -221,12 +221,17 @@ export const Search = ({ onSearch }: { onSearch?: () => void }) => {
       {searchResultsOpen && searchQuery && (
         <div className="z-100 mt-2 md:absolute ltr:right-0 rtl:left-0">
           <div className="max-h-[70vh] min-h-[2rem] w-[94vw] overflow-y-auto rounded bg-gray-800 px-4 py-6 md:max-h-[24rem] md:w-[34rem] md:px-8 md:py-8">
-            {(isLoading || data?.objects?.length === 0) && (
+            {(isLoading ||
+              searchQuery !== debouncedSearchQuery ||
+              data?.objects?.length === 0) && (
               <p className="text-lg font-medium text-gray-100">
-                {isLoading ? t("loading") : t("nothing-found")}
+                {data?.objects?.length === 0
+                  ? t("nothing-found")
+                  : t("loading")}
               </p>
             )}
             {!isLoading &&
+              searchQuery === debouncedSearchQuery &&
               data?.objects?.map((obj) => {
                 const typename = obj.__typename;
                 const highlightedTypename = hasProperty(obj, "_context")

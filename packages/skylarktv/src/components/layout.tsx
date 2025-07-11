@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdStream, MdSearch, MdClose } from "react-icons/md";
 import { useRouter } from "next/router";
 import useTranslation from "next-translate/useTranslation";
@@ -78,25 +78,21 @@ export const SkylarkTVLayout: React.FC<Props> = ({
   const { t } = useTranslation("common");
   const [isMobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-  const links: NavigationLink[] = useMemo(
-    (): NavigationLink[] =>
-      CLIENT_NAVIGATION_CONFIG.links.map(
-        ({ localeKey, ...rest }): NavigationLink => ({
-          text: t(localeKey),
-          ...rest,
-        }),
-      ),
-    [],
+  const {
+    dimensions: { language },
+    setRegion,
+  } = useDimensions();
+
+  const links: NavigationLink[] = CLIENT_NAVIGATION_CONFIG.links.map(
+    ({ localeKey, ...rest }): NavigationLink => ({
+      text: t(localeKey),
+      ...rest,
+    }),
   );
 
   const [modalOpen, setModalOpen] = useState(false);
 
   const skipTitleScreen = hasProperty(query, "skipTitleScreen");
-
-  const {
-    dimensions: { language },
-    setRegion,
-  } = useDimensions();
 
   useEffect(() => {
     if (language === "ar") {
@@ -120,6 +116,7 @@ export const SkylarkTVLayout: React.FC<Props> = ({
 
   const { permissions } = useUser();
 
+  // If permissions length is greater than 1, it'll have more than readonly
   const includeDimensionSettings = !permissions || permissions.length > 1;
 
   return (

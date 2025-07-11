@@ -17,6 +17,17 @@ import { CLIENT_APP_CONFIG, LOCAL_STORAGE } from "../constants/app";
 import { configureSegment, segment } from "../lib/segment";
 import { SEGMENT_WRITE_KEY, AMPLITUDE_API_KEY } from "../constants/env";
 
+// Initialize MSW
+async function enableMocking() {
+  if (process.env.NEXT_PUBLIC_USE_MSW === "true") {
+    const { initMocks } = await import("../mocks");
+
+    await initMocks();
+  }
+}
+
+void enableMocking();
+
 const IntercomWrapper = ({ children }: { children: ReactNode }) =>
   CLIENT_APP_CONFIG.withIntercom ? (
     <IntercomProvider appId={"t104fsur"} autoBoot>
