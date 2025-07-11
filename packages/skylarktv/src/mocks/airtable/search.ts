@@ -1,5 +1,5 @@
 import { airtableData } from "./data";
-import { convertMediaObjectToGraphQL } from "./media-objects";
+import { convertMediaObjectToGraphQL } from "./mediaObjects";
 import {
   assertString,
   assertStringArray,

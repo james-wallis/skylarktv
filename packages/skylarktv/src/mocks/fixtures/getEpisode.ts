@@ -9,7 +9,7 @@ import {
   fetchAndParseMediaObject,
   createListByMetadataHandler,
 } from "../airtableData";
-import { parseEpisode } from "../airtable/parse-media-objects";
+import { parseEpisode } from "../airtable/parseMediaObjects";
 
 export const getEpisodeHandlers = [
   graphql

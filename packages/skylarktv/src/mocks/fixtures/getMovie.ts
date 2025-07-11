@@ -5,7 +5,7 @@ import {
   createGraphQLResponse,
   fetchAndParseMediaObject,
 } from "../airtableData";
-import { parseMovie } from "../airtable/parse-media-objects";
+import { parseMovie } from "../airtable/parseMediaObjects";
 
 export const getMovieHandlers = [
   graphql

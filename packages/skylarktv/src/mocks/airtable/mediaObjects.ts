@@ -8,7 +8,7 @@ import {
   parseBrand,
   parseLiveStream,
   MediaObjectParseOptions,
-} from "./parse-media-objects";
+} from "./parseMediaObjects";
 
 // Options for convertMediaObjectToGraphQL function (alias for compatibility)
 export type ConvertMediaObjectOptions = MediaObjectParseOptions;
@@ -20,9 +20,9 @@ export {
   parseSeason,
   parseBrand,
   parseLiveStream,
-} from "./parse-media-objects";
+} from "./parseMediaObjects";
 
-export type { MediaObjectParseOptions } from "./parse-media-objects";
+export type { MediaObjectParseOptions } from "./parseMediaObjects";
 
 // Convert Airtable media object to GraphQL format
 export const convertMediaObjectToGraphQL = (

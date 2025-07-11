@@ -48,7 +48,7 @@ import {
   parsePerson,
   parseRole,
   parseCallToAction,
-} from "./parse-metadata-objects";
+} from "./parseMetadataObjects";
 
 // Media object parsing options
 export interface MediaObjectParseOptions {

@@ -8,7 +8,7 @@ import {
   findObjectByUidOrExternalId,
   sortByProperty,
 } from "../airtableData";
-import { parseArticle } from "../airtable/parse-media-objects";
+import { parseArticle } from "../airtable/parseMediaObjects";
 
 export const getArticleHandlers = [
   graphql

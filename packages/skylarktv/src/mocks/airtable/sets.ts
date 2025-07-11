@@ -1,8 +1,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Record as AirtableRecord, FieldSet } from "airtable";
 import { airtableData, getSetById, getImageById } from "./data";
-import { convertMediaObjectToGraphQL } from "./media-objects";
-import { generateDynamicContent } from "./dynamic-content";
+import { convertMediaObjectToGraphQL } from "./mediaObjects";
+import { generateDynamicContent } from "./dynamicContent";
 import {
   assertStringArray,
   DEPTH_LIMIT_CONFIG,
@@ -12,7 +12,7 @@ import {
   filterContentByAvailability,
   AvailabilityDimensions,
 } from "./availability";
-import { parseCallToAction, parseImage } from "./parse-metadata-objects";
+import { parseCallToAction, parseImage } from "./parseMetadataObjects";
 
 // Helper function to resolve a set reference to the actual set
 export const resolveSetReference = (setReferenceId: string) => {

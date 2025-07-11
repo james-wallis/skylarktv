@@ -5,7 +5,7 @@ import {
   createGraphQLResponse,
   fetchAndParseMediaObject,
 } from "../airtableData";
-import { parseLiveStream } from "../airtable/parse-media-objects";
+import { parseLiveStream } from "../airtable/parseMediaObjects";
 
 export const getLiveStreamHandlers = [
   // Handle LiveStream queries

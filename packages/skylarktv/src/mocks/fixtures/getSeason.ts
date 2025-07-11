@@ -10,7 +10,7 @@ import {
   sortByProperty,
   findObjectByUidOrExternalId,
 } from "../airtableData";
-import { parseSeason } from "../airtable/parse-media-objects";
+import { parseSeason } from "../airtable/parseMediaObjects";
 
 export const getSeasonHandlers = [
   // Handle Season and Episodes query

@@ -10,10 +10,10 @@ export * from "./requestUtils";
 export * from "./data";
 
 // Media object conversions
-export * from "./media-objects";
+export * from "./mediaObjects";
 
 // Dynamic content functionality
-export * from "./dynamic-content";
+export * from "./dynamicContent";
 
 // Set-related functions
 export * from "./sets";

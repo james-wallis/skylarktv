@@ -10,7 +10,7 @@ import {
   sortByProperty,
   findObjectByUidOrExternalId,
 } from "../airtableData";
-import { parseBrand, parseSeason } from "../airtable/parse-media-objects";
+import { parseBrand, parseSeason } from "../airtable/parseMediaObjects";
 
 export const getBrandHandlers = [
   graphql

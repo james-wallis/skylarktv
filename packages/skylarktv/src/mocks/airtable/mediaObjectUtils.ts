@@ -3,8 +3,8 @@
 import { Record as AirtableRecord, FieldSet } from "airtable";
 import { airtableData, getMediaObjectByUidOrExternalId } from "./data";
 import { isObjectType } from "./utils";
-import { MediaObjectParseOptions } from "./parse-media-objects";
-import { convertMediaObjectToGraphQL } from "./media-objects";
+import { MediaObjectParseOptions } from "./parseMediaObjects";
+import { convertMediaObjectToGraphQL } from "./mediaObjects";
 
 // Fetch and parse media object with type checking
 export const fetchAndParseMediaObject = <T>(
