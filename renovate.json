@@ -1,16 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabled": false,
+  "enabled": true,
   "rangeStrategy": "pin",
-  "packageRules": [
-    {
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch",
-      "matchPackageNames": ["*"]
-    }
-  ],
-  "schedule": ["before 4am on Monday"],
-  "draftPR": true
+  "draftPR": false
 }
