@@ -4,13 +4,47 @@ import { Airtables } from "./interfaces";
 import { AIRTABLE_API_KEY, AIRTABLE_BASE_ID } from "./constants";
 import { pause } from "./skylark/saas/utils";
 
+const dimensionTables = ["customer-types", "device-types", "regions"] as const;
+
+const tables = [
+  "Media Content",
+  "Media Content - Translations",
+  "roles",
+  "roles - Translations",
+  "people",
+  "people - Translations",
+  "credits",
+  "credits - Translations",
+  "genres",
+  "genres - Translations",
+  "themes",
+  "themes - Translations",
+  "ratings",
+  "tags",
+  "images",
+  "availability",
+  "audience-segments",
+  "sets",
+  "sets-metadata",
+  "asset-types",
+  "image-types",
+  "tag-types",
+  "languages",
+  "call-to-actions",
+  "call-to-actions - Translations",
+  "articles",
+  "articles - Translations",
+] as const;
+
+type TableName = (typeof tables)[number] | (typeof dimensionTables)[number];
+
 /**
  * getTable - fetches a table from Airtable and filters empty rows
  * @param name - the table name
  * @returns table contents
  */
-const getTable = async (
-  name: string,
+export const getTable = async (
+  name: TableName,
   offset = "",
 ): Promise<Record<FieldSet>[]> => {
   try {
@@ -66,40 +100,9 @@ const getTable = async (
  * @returns Object containing Airtable tables
  */
 export const getAllTables = async (): Promise<Airtables> => {
-  const dimensionTables = ["customer-types", "device-types", "regions"];
   const [customerTypes, deviceTypes, regions] = await Promise.all(
     dimensionTables.map((table) => getTable(table)),
   );
-
-  const tables = [
-    "Media Content",
-    "Media Content - Translations",
-    "roles",
-    "roles - Translations",
-    "people",
-    "people - Translations",
-    "credits",
-    "credits - Translations",
-    "genres",
-    "genres - Translations",
-    "themes",
-    "themes - Translations",
-    "ratings",
-    "tags",
-    "images",
-    "availability",
-    "audience-segments",
-    "sets",
-    "sets-metadata",
-    "asset-types",
-    "image-types",
-    "tag-types",
-    "languages",
-    "call-to-actions",
-    "call-to-actions - Translations",
-    "articles",
-    "articles - Translations",
-  ];
 
   const responses: Record<FieldSet>[][] = [];
 

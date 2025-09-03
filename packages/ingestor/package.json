@@ -42,7 +42,8 @@
     "ingest:legacy-to-skylark": "ts-node src/lib/ingestLegacyObjectsToSkylark/main.ts",
     "ingest:legacy-to-skylark-from-disk": "cross-env READ_LEGACY_OBJECTS_FROM_DISK=true yarn ingest:legacy-to-skylark",
     "ingest:legacy-to-skylark:availability": "ts-node src/lib/ingestLegacyObjectsToSkylark/scripts/assignAlwaysAvailabilityToAllObjects.ts",
-    "ingest:legacy-to-skylark:cloudinary-images": "ts-node src/lib/ingestLegacyObjectsToSkylark/scripts/migrateLegacySkylarkImagesToCloudinary.ts"
+    "ingest:legacy-to-skylark:cloudinary-images": "ts-node src/lib/ingestLegacyObjectsToSkylark/scripts/migrateLegacySkylarkImagesToCloudinary.ts",
+    "upload-airtable-images": "ts-node src/scripts/uploadAirtableImagesToCloudinary.ts"
   },
   "resolutions": {
     "axios": "1.7.9"

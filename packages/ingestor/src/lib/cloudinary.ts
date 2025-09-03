@@ -28,7 +28,7 @@ export const uploadCloudinaryImage = async (
   const res = await cloudinaryClient.post<string>(
     "/upload",
     `file=${imageUrl}&upload_preset=${
-      process.env.CLIENT_CLOUDINARY_PRESET as string
+      cloudinaryPreset || (process.env.CLIENT_CLOUDINARY_PRESET as string)
     }`,
   );
 
