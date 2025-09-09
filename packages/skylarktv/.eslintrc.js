@@ -19,5 +19,14 @@ module.exports = {
         "no-underscore-dangle": "off",
       },
     },
+    {
+      files: ["e2e/**/*.ts", "e2e/**/*.tsx"],
+      rules: {
+        "no-await-in-loop": "off",
+        "@typescript-eslint/no-misused-promises": "off",
+        "import/no-extraneous-dependencies": "off",
+        "no-restricted-syntax": "off",
+      },
+    },
   ],
 };

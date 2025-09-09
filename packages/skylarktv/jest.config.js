@@ -8,6 +8,10 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   ...base,
   setupFilesAfterEnv: ["./setupJestTests.js"],
+  testPathIgnorePatterns: [
+    ...(base.testPathIgnorePatterns || []),
+    "<rootDir>/e2e/",
+  ],
 };
 
 module.exports = createJestConfig(customJestConfig);

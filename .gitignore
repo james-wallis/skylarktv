@@ -46,3 +46,8 @@ temp/
 # Auto generated files via codegen.ts
 packages/skylarktv/src/styles/globals.css
 packages/skylarktv/public/site.webmanifest
+
+# Playwright
+playwright-report/
+test-results/
+.playwright-artifacts-*/
