@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --brand-primary: #5b45ce;
-  --brand-accent: #7760d6;
+  --skylarktv-primary-color: #5b45ce;
+  --skylarktv-accent-color: #7760d6;
+  --skylarktv-header-color: rgba(12, 12, 12, 0.7);
 }
 
 html,
@@ -16,6 +17,6 @@ body,
 }
 
 body {
-  font-family: var(--font-inter, "Inter"), system-ui, sans-serif;
+  font-family: "Outfit", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
