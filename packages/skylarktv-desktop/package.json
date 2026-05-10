@@ -1,0 +1,24 @@
+{
+  "name": "@skylark-apps/skylarktv-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron shell wrapping the SkylarkTV streaming UI for macOS.",
+  "main": "dist/main.js",
+  "scripts": {
+    "tsc": "tsc",
+    "build:main": "tsc",
+    "build:renderer": "cd ../skylarktv && cross-env BUILD_TARGET=electron yarn build",
+    "build:app": "yarn build:renderer && yarn build:main && electron-builder --mac --universal",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "cross-env": "7.0.3",
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "typescript": "5.7.2"
+  },
+  "dependencies": {
+    "electron-store": "8.2.0"
+  }
+}
