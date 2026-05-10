@@ -17,4 +17,7 @@ const baseConfig = {
 
 const moduleExports = withPlausibleProxy()(baseConfig);
 
-module.exports = nextTranslate(moduleExports);
+// next-translate-plugin injects Next.js i18n config, which is incompatible
+// with output: 'export'. Skip it for the Electron build; the app falls back
+// to the default locale baked in by useTranslation.
+module.exports = isElectronBuild ? moduleExports : nextTranslate(moduleExports);

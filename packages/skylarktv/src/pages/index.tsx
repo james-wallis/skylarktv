@@ -12,7 +12,7 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
     locale || "",
   );
   return {
-    revalidate: 300,
+    ...(process.env.BUILD_TARGET !== "electron" && { revalidate: 300 }),
     props: {
       seo,
     },

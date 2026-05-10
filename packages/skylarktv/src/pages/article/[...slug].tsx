@@ -27,7 +27,9 @@ import {
 export function getStaticPaths() {
   return {
     paths: [],
-    fallback: true,
+    // Static export can't fall back to server-rendered routes, so no article
+    // pages are pre-generated in that mode; the route remains client-driven.
+    fallback: process.env.BUILD_TARGET !== "electron",
   };
 }
 
@@ -41,7 +43,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       props: {
         seo,
       },
-      revalidate: 10,
+      ...(process.env.BUILD_TARGET !== "electron" && { revalidate: 10 }),
     };
   }
 
@@ -49,7 +51,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     props: {
       seo: {},
     },
-    revalidate: 10,
+    ...(process.env.BUILD_TARGET !== "electron" && { revalidate: 10 }),
   };
 };
 
