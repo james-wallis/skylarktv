@@ -83,6 +83,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [skylarkApiUrl, setSkylarkApiUrl] = useState(
     process.env.NEXT_PUBLIC_SAAS_API_ENDPOINT,
   );
+  const router = useRouter();
 
   useEffect(() => {
     const update = () => {
@@ -98,6 +99,17 @@ function MyApp({ Component, pageProps }: AppProps) {
       window.removeEventListener("storage", update);
     };
   }, []);
+
+  // Electron first-launch: route to /settings until both libraries are picked.
+  useEffect(() => {
+    if (!window.electronAPI) return;
+    if (router.pathname === "/settings") return;
+    void window.electronAPI.getLibraries().then(({ tv, movies }) => {
+      if (!tv && !movies) {
+        void router.replace("/settings");
+      }
+    });
+  }, [router]);
 
   const queryClient = new QueryClient();
 
