@@ -8,6 +8,9 @@ const isElectronBuild = process.env.BUILD_TARGET === "electron";
 
 const baseConfig = {
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_IS_ELECTRON_BUILD: isElectronBuild ? "true" : "",
+  },
   ...(isElectronBuild && {
     output: "export",
     images: { unoptimized: true },

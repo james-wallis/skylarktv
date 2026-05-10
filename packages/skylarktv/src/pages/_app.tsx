@@ -111,7 +111,24 @@ function MyApp({ Component, pageProps }: AppProps) {
     });
   }, [router]);
 
-  const queryClient = new QueryClient();
+  // QueryClient memoised so the same instance is reused across renders.
+  // Electron build disables window-focus/reconnect refetching to avoid waking
+  // a sleeping app on focus and to stay battery-conservative on macOS laptops.
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions:
+          process.env.NEXT_PUBLIC_IS_ELECTRON_BUILD === "true"
+            ? {
+                queries: {
+                  refetchOnWindowFocus: false,
+                  refetchOnReconnect: false,
+                  refetchInterval: false,
+                },
+              }
+            : undefined,
+      }),
+  );
 
   return (
     <SegmentWrapper>
