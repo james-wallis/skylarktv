@@ -21,7 +21,7 @@ import {
 import { LiveStream, Availability, ImageType } from "../../types";
 import { CLIENT_APP_CONFIG } from "../../constants/app";
 
-const fetchLiveStreamSeo: GetServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps = async (context) => {
   const seo = await getSeoDataForObject(
     "SkylarkLiveStream",
     context.query.slug as string,
@@ -34,11 +34,6 @@ const fetchLiveStreamSeo: GetServerSideProps = async (context) => {
     },
   };
 };
-
-// Static export (Electron build) can't include getServerSideProps. Falls back
-// to client-side SEO via NextSeo + useObject in that case.
-export const getServerSideProps =
-  process.env.BUILD_TARGET === "electron" ? undefined : fetchLiveStreamSeo;
 
 const LiveStreamPage: NextPage<{ seo?: SeoObjectData }> = ({ seo }) => {
   const { query } = useRouter();

@@ -11,15 +11,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useEffect, useState } from "react";
 import { IntercomProvider } from "react-use-intercom";
 import { useRouter } from "next/router";
-import I18nProvider from "next-translate/I18nProvider";
 import { SkylarkTVLayout } from "../components/layout";
 import { DimensionsContextProvider } from "../contexts";
 import { CLIENT_APP_CONFIG, LOCAL_STORAGE } from "../constants/app";
 import { configureSegment, segment } from "../lib/segment";
 import { SEGMENT_WRITE_KEY, AMPLITUDE_API_KEY } from "../constants/env";
-import commonEn from "../../locales/en-gb/common.json";
-
-const IS_ELECTRON_BUILD = process.env.NEXT_PUBLIC_IS_ELECTRON_BUILD === "true";
 
 // Initialize MSW
 let mockingEnabled = false;
@@ -87,7 +83,6 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [skylarkApiUrl, setSkylarkApiUrl] = useState(
     process.env.NEXT_PUBLIC_SAAS_API_ENDPOINT,
   );
-  const router = useRouter();
 
   useEffect(() => {
     const update = () => {
@@ -104,40 +99,9 @@ function MyApp({ Component, pageProps }: AppProps) {
     };
   }, []);
 
-  // Electron first-launch: route to /settings until both libraries are picked.
-  useEffect(() => {
-    if (!window.electronAPI) return;
-    if (router.pathname === "/settings") return;
-    void window.electronAPI.getLibraries().then(({ tv, movies }) => {
-      if (!tv && !movies) {
-        void router.replace("/settings");
-      }
-    });
-  }, [router]);
+  const queryClient = new QueryClient();
 
-  // QueryClient memoised so the same instance is reused across renders.
-  // Electron build disables window-focus/reconnect refetching to avoid waking
-  // a sleeping app on focus and to stay battery-conservative on macOS laptops.
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions:
-          process.env.NEXT_PUBLIC_IS_ELECTRON_BUILD === "true"
-            ? {
-                queries: {
-                  refetchOnWindowFocus: false,
-                  refetchOnReconnect: false,
-                  refetchInterval: false,
-                },
-              }
-            : undefined,
-      }),
-  );
-
-  // Electron build skips next-translate-plugin (it injects i18n config that
-  // is incompatible with output: 'export'), so the plugin never registers
-  // translations. Provide them directly via I18nProvider here.
-  const appTree = (
+  return (
     <SegmentWrapper>
       <PlausibleProvider domain={process.env.NEXT_PUBLIC_APP_DOMAIN as string}>
         <QueryClientProvider client={queryClient}>
@@ -152,16 +116,6 @@ function MyApp({ Component, pageProps }: AppProps) {
       </PlausibleProvider>
     </SegmentWrapper>
   );
-
-  if (IS_ELECTRON_BUILD) {
-    return (
-      <I18nProvider lang="en-gb" namespaces={{ common: commonEn }}>
-        {appTree}
-      </I18nProvider>
-    );
-  }
-
-  return appTree;
 }
 
 export default process.env.NEXT_PUBLIC_PASSWORD_PROTECT
