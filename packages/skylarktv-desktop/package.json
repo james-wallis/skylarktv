@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Electron shell wrapping the SkylarkTV streaming UI for macOS.",
+  "author": "James Wallis <j@wallis.dev>",
   "main": "dist/main.js",
   "scripts": {
     "tsc": "tsc",
