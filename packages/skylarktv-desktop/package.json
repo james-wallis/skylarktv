@@ -7,9 +7,10 @@
   "scripts": {
     "tsc": "tsc",
     "build:main": "tsc",
-    "build:renderer": "cd ../skylarktv && cross-env BUILD_TARGET=electron yarn build",
+    "build:renderer": "cd ../skylarktv && yarn build:export",
     "build:app": "yarn build:renderer && yarn build:main && electron-builder --mac --universal",
-    "start": "electron ."
+    "start": "yarn build:main && electron .",
+    "start:dev": "yarn build:main && cross-env ELECTRON_RENDERER_URL=http://localhost:3000 electron ."
   },
   "devDependencies": {
     "@types/node": "22.10.2",
