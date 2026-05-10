@@ -1,0 +1,41 @@
+{
+  "name": "@skylark-apps/localtv",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted local-files TV app, packaged as an Electron desktop app.",
+  "author": "James Wallis <j@wallis.dev>",
+  "main": "dist/electron/main.js",
+  "scripts": {
+    "dev:next": "cross-env BUILD_TARGET=electron next dev -p 3100",
+    "dev": "start-server-and-test dev:next http://localhost:3100 dev:electron",
+    "dev:electron": "yarn build:electron && cross-env ELECTRON_RENDERER_URL=http://localhost:3100 electron .",
+    "build:renderer": "cross-env BUILD_TARGET=electron next build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:app": "yarn build:renderer && yarn build:electron && electron-builder --mac --universal",
+    "start": "yarn build:electron && electron .",
+    "lint": "eslint .",
+    "tsc": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit"
+  },
+  "dependencies": {
+    "@skylark-apps/skylarktv": "0.1.0",
+    "@tanstack/react-query": "5.62.7",
+    "clsx": "2.1.1",
+    "electron-store": "8.2.0",
+    "next": "15.1.0",
+    "next-seo": "6.6.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-icons": "5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.1",
+    "autoprefixer": "10.4.20",
+    "cross-env": "7.0.3",
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "postcss": "8.4.49",
+    "tailwindcss": "3.4.16",
+    "typescript": "5.7.2"
+  }
+}

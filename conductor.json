@@ -2,5 +2,6 @@
   "scripts": {
     "setup": "yarn install",
     "run": "yarn dev:desktop"
-  }
+  },
+  "runScriptMode": "concurrent"
 }

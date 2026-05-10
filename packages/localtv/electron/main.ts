@@ -6,7 +6,8 @@ import { extname, join, normalize, resolve } from "path";
 import { AddressInfo } from "net";
 import { IPC_CHANNELS, type Libraries, type LibraryKind } from "./shared";
 
-const RENDERER_OUT_DIR = resolve(__dirname, "../../skylarktv/out");
+const RENDERER_OUT_DIR = resolve(__dirname, "../../out");
+const BRAND_NAME = process.env.BRAND_NAME || "LocalTV";
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -55,12 +56,12 @@ function setLibrary(kind: LibraryKind, path: string | null): void {
 }
 
 async function pickFolder(kind: LibraryKind): Promise<string | null> {
-  const titleByKind: Record<LibraryKind, string> = {
+  const titles: Record<LibraryKind, string> = {
     tv: "Choose your TV Shows folder",
     movies: "Choose your Movies folder",
   };
   const result = await dialog.showOpenDialog(mainWindow!, {
-    title: titleByKind[kind],
+    title: titles[kind],
     properties: ["openDirectory", "createDirectory"],
   });
   if (result.canceled || result.filePaths.length === 0) {
@@ -145,6 +146,7 @@ async function createMainWindow(): Promise<void> {
     height: 800,
     minWidth: 960,
     minHeight: 600,
+    title: BRAND_NAME,
     backgroundColor: "#0c0c0c",
     titleBarStyle: "hiddenInset",
     webPreferences: {
@@ -164,13 +166,13 @@ async function createMainWindow(): Promise<void> {
   await mainWindow.loadURL(rendererOrigin);
 }
 
-app.whenReady().then(async () => {
+void app.whenReady().then(async () => {
   registerIpcHandlers();
   await createMainWindow();
 
-  app.on("activate", async () => {
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      await createMainWindow();
+      void createMainWindow();
     }
   });
 });

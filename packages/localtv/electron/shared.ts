@@ -6,7 +6,7 @@ export interface Libraries {
 }
 
 export const IPC_CHANNELS = {
-  pickFolder: "skylarktv:pickFolder",
-  getLibraries: "skylarktv:getLibraries",
-  clearLibrary: "skylarktv:clearLibrary",
+  pickFolder: "localtv:pickFolder",
+  getLibraries: "localtv:getLibraries",
+  clearLibrary: "localtv:clearLibrary",
 } as const;
