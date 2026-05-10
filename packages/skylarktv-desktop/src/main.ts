@@ -1,8 +1,10 @@
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import Store from "electron-store";
 import { createServer, type Server } from "http";
 import { createReadStream, statSync } from "fs";
 import { extname, join, normalize, resolve } from "path";
 import { AddressInfo } from "net";
+import { IPC_CHANNELS, type Libraries, type LibraryKind } from "./shared";
 
 const RENDERER_OUT_DIR = resolve(__dirname, "../../skylarktv/out");
 
@@ -29,8 +31,55 @@ const MIME_TYPES: Record<string, string> = {
   ".txt": "text/plain; charset=utf-8",
 };
 
+interface StoreSchema {
+  schemaVersion: number;
+  libraries: Libraries;
+}
+
+const store = new Store<StoreSchema>({
+  defaults: {
+    schemaVersion: 1,
+    libraries: { tv: null, movies: null },
+  },
+});
+
 let server: Server | undefined;
 let mainWindow: BrowserWindow | undefined;
+
+function getLibraries(): Libraries {
+  return store.get("libraries");
+}
+
+function setLibrary(kind: LibraryKind, path: string | null): void {
+  store.set(`libraries.${kind}`, path);
+}
+
+async function pickFolder(kind: LibraryKind): Promise<string | null> {
+  const titleByKind: Record<LibraryKind, string> = {
+    tv: "Choose your TV Shows folder",
+    movies: "Choose your Movies folder",
+  };
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    title: titleByKind[kind],
+    properties: ["openDirectory", "createDirectory"],
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return getLibraries()[kind];
+  }
+  const [chosen] = result.filePaths;
+  setLibrary(kind, chosen);
+  return chosen;
+}
+
+function registerIpcHandlers(): void {
+  ipcMain.handle(IPC_CHANNELS.pickFolder, (_, kind: LibraryKind) =>
+    pickFolder(kind),
+  );
+  ipcMain.handle(IPC_CHANNELS.getLibraries, () => getLibraries());
+  ipcMain.handle(IPC_CHANNELS.clearLibrary, (_, kind: LibraryKind) => {
+    setLibrary(kind, null);
+  });
+}
 
 function resolveStaticPath(urlPath: string): string | null {
   const decoded = decodeURIComponent(urlPath.split("?")[0]);
@@ -99,6 +148,7 @@ async function createMainWindow(): Promise<void> {
     backgroundColor: "#0c0c0c",
     titleBarStyle: "hiddenInset",
     webPreferences: {
+      preload: join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -115,6 +165,7 @@ async function createMainWindow(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  registerIpcHandlers();
   await createMainWindow();
 
   app.on("activate", async () => {
