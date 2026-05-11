@@ -18,6 +18,7 @@ jobs:
           node-version: 18
           cache: yarn
       - run: yarn
+      - run: yarn tsc:all
       - run: yarn lint:all
       - run: yarn prettier:check
       - run: yarn test:ci
