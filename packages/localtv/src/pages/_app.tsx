@@ -15,7 +15,8 @@ import { AppHeader } from "../components/app-header";
 
 const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || "LocalTV";
 const BRAND_PRIMARY = process.env.NEXT_PUBLIC_BRAND_PRIMARY || "#5b45ce";
-const BRAND_ACCENT = process.env.NEXT_PUBLIC_BRAND_ACCENT || "#7760d6";
+const BRAND_ACCENT = process.env.NEXT_PUBLIC_BRAND_ACCENT || "#ff385c";
+const BRAND_HEADER = process.env.NEXT_PUBLIC_BRAND_HEADER || BRAND_PRIMARY;
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <style>{`:root {
           --skylarktv-primary-color: ${BRAND_PRIMARY};
           --skylarktv-accent-color: ${BRAND_ACCENT};
-          --skylarktv-header-color: rgba(12, 12, 12, 0.7);
+          --skylarktv-header-color: ${BRAND_HEADER};
         }`}</style>
       </Head>
       <div className="relative min-h-screen w-full overflow-x-hidden">

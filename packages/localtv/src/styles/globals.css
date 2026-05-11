@@ -4,19 +4,6 @@
 
 :root {
   --skylarktv-primary-color: #5b45ce;
-  --skylarktv-accent-color: #7760d6;
-  --skylarktv-header-color: rgba(12, 12, 12, 0.7);
-}
-
-html,
-body,
-#__next {
-  height: 100%;
-  background-color: #0c0c0c;
-  color: #f5f5f5;
-}
-
-body {
-  font-family: "Outfit", system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  --skylarktv-accent-color: #ff385c;
+  --skylarktv-header-color: #5b45ce;
 }
