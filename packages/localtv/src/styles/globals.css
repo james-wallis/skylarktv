@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --skylarktv-primary-color: #5b45ce;
+  --skylarktv-accent-color: #ff385c;
+  --skylarktv-header-color: #5b45ce;
+}

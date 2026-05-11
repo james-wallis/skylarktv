@@ -1,0 +1,188 @@
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import Store from "electron-store";
+import { createServer, type Server } from "http";
+import { createReadStream, statSync } from "fs";
+import { extname, join, normalize, resolve } from "path";
+import { AddressInfo } from "net";
+import { IPC_CHANNELS, type Libraries, type LibraryKind } from "./shared";
+
+const RENDERER_OUT_DIR = resolve(__dirname, "../../out");
+const BRAND_NAME = process.env.BRAND_NAME || "LocalTV";
+
+const MIME_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".webmanifest": "application/manifest+json",
+  ".txt": "text/plain; charset=utf-8",
+};
+
+interface StoreSchema {
+  schemaVersion: number;
+  libraries: Libraries;
+}
+
+const store = new Store<StoreSchema>({
+  defaults: {
+    schemaVersion: 1,
+    libraries: { tv: null, movies: null },
+  },
+});
+
+let server: Server | undefined;
+let mainWindow: BrowserWindow | undefined;
+
+function getLibraries(): Libraries {
+  return store.get("libraries");
+}
+
+function setLibrary(kind: LibraryKind, path: string | null): void {
+  store.set(`libraries.${kind}`, path);
+}
+
+async function pickFolder(kind: LibraryKind): Promise<string | null> {
+  const titles: Record<LibraryKind, string> = {
+    tv: "Choose your TV Shows folder",
+    movies: "Choose your Movies folder",
+  };
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    title: titles[kind],
+    properties: ["openDirectory", "createDirectory"],
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return getLibraries()[kind];
+  }
+  const [chosen] = result.filePaths;
+  setLibrary(kind, chosen);
+  return chosen;
+}
+
+function registerIpcHandlers(): void {
+  ipcMain.handle(IPC_CHANNELS.pickFolder, (_, kind: LibraryKind) =>
+    pickFolder(kind),
+  );
+  ipcMain.handle(IPC_CHANNELS.getLibraries, () => getLibraries());
+  ipcMain.handle(IPC_CHANNELS.clearLibrary, (_, kind: LibraryKind) => {
+    setLibrary(kind, null);
+  });
+}
+
+function resolveStaticPath(urlPath: string): string | null {
+  const decoded = decodeURIComponent(urlPath.split("?")[0]);
+  const normalized = normalize(decoded).replace(/^(\.\.[/\\])+/, "");
+  const candidates = [
+    join(RENDERER_OUT_DIR, normalized),
+    join(RENDERER_OUT_DIR, normalized, "index.html"),
+    join(RENDERER_OUT_DIR, `${normalized}.html`),
+  ];
+  for (const candidate of candidates) {
+    if (!candidate.startsWith(RENDERER_OUT_DIR)) continue;
+    try {
+      const stat = statSync(candidate);
+      if (stat.isFile()) return candidate;
+    } catch {
+      // continue
+    }
+  }
+  return null;
+}
+
+function startRendererServer(): Promise<string> {
+  return new Promise((res, rej) => {
+    server = createServer((req, response) => {
+      const url = req.url || "/";
+      const filePath =
+        resolveStaticPath(url) ?? join(RENDERER_OUT_DIR, "404.html");
+
+      try {
+        const stat = statSync(filePath);
+        if (!stat.isFile()) {
+          response.statusCode = 404;
+          response.end("Not Found");
+          return;
+        }
+        response.setHeader(
+          "Content-Type",
+          MIME_TYPES[extname(filePath).toLowerCase()] ??
+            "application/octet-stream",
+        );
+        response.setHeader("Content-Length", stat.size);
+        createReadStream(filePath).pipe(response);
+      } catch {
+        response.statusCode = 404;
+        response.end("Not Found");
+      }
+    });
+
+    server.on("error", rej);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server!.address() as AddressInfo;
+      res(`http://127.0.0.1:${address.port}`);
+    });
+  });
+}
+
+async function createMainWindow(): Promise<void> {
+  const devUrl = process.env.ELECTRON_RENDERER_URL;
+  const rendererOrigin = devUrl ?? (await startRendererServer());
+
+  mainWindow = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    minWidth: 960,
+    minHeight: 600,
+    title: BRAND_NAME,
+    backgroundColor: "#0c0c0c",
+    titleBarStyle: "hiddenInset",
+    webPreferences: {
+      preload: join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
+    },
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    void shell.openExternal(url);
+    return { action: "deny" };
+  });
+
+  await mainWindow.loadURL(rendererOrigin);
+}
+
+void app.whenReady().then(async () => {
+  registerIpcHandlers();
+  await createMainWindow();
+
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      void createMainWindow();
+    }
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+app.on("before-quit", () => {
+  server?.close();
+});

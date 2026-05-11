@@ -1,0 +1,5 @@
+.next/
+out/
+dist/
+release/
+next-env.d.ts

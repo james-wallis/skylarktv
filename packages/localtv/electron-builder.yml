@@ -1,0 +1,32 @@
+appId: ${env.APP_ID}
+productName: ${env.BRAND_NAME}
+copyright: Copyright © 2026 James Wallis
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - "dist/**/*"
+  - "out/**/*"
+  - "package.json"
+
+extraMetadata:
+  main: dist/electron/main.js
+
+asar: true
+
+mac:
+  category: public.app-category.entertainment
+  target:
+    - target: dmg
+      arch: [universal]
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize:
+    teamId: ${env.APPLE_TEAM_ID}
+
+dmg:
+  writeUpdateInfo: false
