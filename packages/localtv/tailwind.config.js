@@ -23,6 +23,18 @@ module.exports = {
           primary: "var(--skylarktv-primary-color)",
           accent: "var(--skylarktv-accent-color)",
           header: "var(--skylarktv-header-color)",
+          purple: {
+            50: "#EDE8F9",
+            100: "#D0C7F0",
+            300: "#917CDE",
+            400: "#7760D6",
+            500: "#5B45CE",
+            700: "#4138BE",
+          },
+        },
+        button: {
+          secondary: "rgba(104, 108, 119, 0.65)",
+          tertiary: "rgba(27, 26, 32, 0.25)",
         },
         gray: {
           50: "#F7F7FC",
