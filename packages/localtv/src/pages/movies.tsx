@@ -1,14 +1,10 @@
+import { PageContainer } from "../components/page-container";
+
 export default function Movies() {
   return (
-    <section className="mx-auto max-w-5xl px-8 pb-16 pt-32 md:px-md-gutter lg:px-lg-gutter xl:px-xl-gutter">
-      <h1 className="font-display text-3xl font-semibold tracking-tight text-white md:text-5xl">
-        {"Movies"}
-      </h1>
-      <p className="mt-4 text-base text-gray-400">
-        {
-          "No movies yet. Set your Movies folder in Settings to populate this page."
-        }
-      </p>
-    </section>
+    <PageContainer
+      description="No movies yet. Set your Movies folder in Settings to populate this page."
+      title="Movies"
+    />
   );
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { PageContainer } from "../components/page-container";
 import type { Libraries, LibraryKind } from "../types/electron-api";
 
 const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || "LocalTV";
@@ -82,14 +83,11 @@ export default function SettingsPage() {
   if (!isLoaded) return null;
 
   return (
-    <section className="mx-auto max-w-3xl px-8 pb-16 pt-32 md:px-md-gutter lg:px-lg-gutter xl:px-xl-gutter">
-      <h1 className="font-display text-3xl font-semibold tracking-tight text-white md:text-5xl">
-        {"Settings"}
-      </h1>
-      <p className="mt-4 text-base text-gray-400">
-        {`Choose the folders ${BRAND_NAME} should look in for your media. Selections are stored locally and survive app restarts.`}
-      </p>
-      <div className="mt-10">
+    <PageContainer
+      description={`Choose the folders ${BRAND_NAME} should look in for your media. Selections are stored locally and survive app restarts.`}
+      title="Settings"
+    >
+      <div className="mt-4 max-w-3xl">
         <LibraryRow
           kind="tv"
           path={libraries.tv}
@@ -103,6 +101,6 @@ export default function SettingsPage() {
           onClear={handleClear}
         />
       </div>
-    </section>
+    </PageContainer>
   );
 }
