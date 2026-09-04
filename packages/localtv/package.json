@@ -36,7 +36,7 @@
     "@tailwindcss/typography": "0.5.15",
     "@types/node": "22.10.2",
     "@types/react": "19.0.1",
-    "autoprefixer": "10.4.20",
+    "autoprefixer": "10.5.5",
     "cross-env": "7.0.3",
     "electron": "33.2.1",
     "electron-builder": "25.1.8",
