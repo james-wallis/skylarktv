@@ -11,7 +11,9 @@ export interface AvailabilityDimensions {
   regions: string[];
 }
 
-// Helper function to get the next Sunday at 9 PM
+// Helper function to get the next Sunday at 9 PM (the first one after now).
+// If today is Sunday and it's before 9 PM, this returns today at 9 PM so that
+// "Forward 7 days" in the time travel drawer always crosses the boundary.
 const getNextSundayAt9PM = (): Date => {
   const now = new Date();
   const nextSunday = new Date(now);
@@ -19,11 +21,13 @@ const getNextSundayAt9PM = (): Date => {
   // Calculate days until next Sunday (0 = Sunday, 1 = Monday, etc.)
   const daysUntilSunday = (7 - now.getDay()) % 7;
 
-  // If today is Sunday, get next Sunday (add 7 days)
-  const daysToAdd = daysUntilSunday === 0 ? 7 : daysUntilSunday;
-
-  nextSunday.setDate(now.getDate() + daysToAdd);
+  nextSunday.setDate(now.getDate() + daysUntilSunday);
   nextSunday.setHours(21, 0, 0, 0); // 9 PM
+
+  // Today is Sunday but 9 PM has already passed, use next week's Sunday
+  if (nextSunday <= now) {
+    nextSunday.setDate(nextSunday.getDate() + 7);
+  }
 
   return nextSunday;
 };
@@ -45,6 +49,15 @@ const computeDynamicDates = (availabilityRecord: AirtableRecord<FieldSet>) => {
     return {
       starts: null,
       ends: nextSunday,
+    };
+  }
+
+  if (slug === "active-in-the-past") {
+    // Expired availability - the Airtable record has no dates so give it an
+    // end date in the past, otherwise it would be treated as always active
+    return {
+      starts: null,
+      ends: new Date(0),
     };
   }
 
