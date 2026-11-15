@@ -43,11 +43,8 @@ export const getTimeTravelFromRequest = (headers: Headers): Date | null => {
     return null;
   }
 
-  try {
-    return new Date(timeTravel);
-  } catch {
-    return null;
-  }
+  const date = new Date(timeTravel);
+  return Number.isNaN(date.getTime()) ? null : date;
 };
 
 // Request context interface for consolidated header extraction

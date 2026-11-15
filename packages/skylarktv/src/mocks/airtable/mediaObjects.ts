@@ -63,6 +63,7 @@ export interface GetObjectsByTypeOptions {
   depth: number;
   languageCode?: string;
   requestedDimensions?: AvailabilityDimensions;
+  timeTravelDate?: Date | null;
 }
 
 // Get all objects of a specific type
@@ -72,6 +73,7 @@ export const getObjectsByType = (options: GetObjectsByTypeOptions) => {
     depth,
     languageCode,
     requestedDimensions,
+    timeTravelDate,
   }: GetObjectsByTypeOptions = options;
 
   const filtered = airtableData.mediaObjects.filter((obj) =>
@@ -86,6 +88,7 @@ export const getObjectsByType = (options: GetObjectsByTypeOptions) => {
           currentDepth: depth,
           languageCode,
           requestedDimensions,
+          timeTravelDate,
         }) as Record<string, unknown> | null,
     )
     .filter((item): item is NonNullable<typeof item> => item !== null);

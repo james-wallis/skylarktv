@@ -105,6 +105,7 @@ export interface ConvertSetToGraphQLOptions {
   currentDepth?: number;
   languageCode?: string;
   requestedDimensions?: AvailabilityDimensions;
+  timeTravelDate?: Date | null;
 }
 
 // Convert Airtable set to GraphQL format with content
@@ -116,6 +117,7 @@ export const convertSetToGraphQL = (
     currentDepth = 0,
     languageCode,
     requestedDimensions,
+    timeTravelDate,
   } = options;
   const { fields } = airtableSet;
 
@@ -140,6 +142,7 @@ export const convertSetToGraphQL = (
       setAvailabilityIds,
       requestedDimensions,
       airtableData,
+      timeTravelDate,
     );
 
     // If the set doesn't have access, return null to filter it out
@@ -182,6 +185,7 @@ export const convertSetToGraphQL = (
                   currentDepth: currentDepth + 1,
                   languageCode,
                   requestedDimensions,
+                  timeTravelDate,
                 });
                 // Note: contentObj could be null if the nested set is filtered out by availability
               }
@@ -196,6 +200,7 @@ export const convertSetToGraphQL = (
                     currentDepth: currentDepth + 1,
                     languageCode,
                     requestedDimensions,
+                    timeTravelDate,
                   })
                 : null;
             }

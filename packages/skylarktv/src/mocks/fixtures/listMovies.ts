@@ -5,21 +5,16 @@ import {
   convertMediaObjectToGraphQL,
   isObjectType,
   getObjectsByType,
-  getLanguageFromRequest,
-  getAvailabilityDimensionsFromRequest,
+  extractRequestContext,
 } from "../airtableData";
 
 export const listMoviesHandlers = [
   graphql.link(SAAS_API_ENDPOINT).query("LIST_MOVIES", ({ request }) => {
-    const languageCode = getLanguageFromRequest(request.headers);
-    const requestedDimensions = getAvailabilityDimensionsFromRequest(
-      request.headers,
-    );
+    const requestContext = extractRequestContext(request.headers);
     const movies = getObjectsByType({
       type: "movies",
       depth: 0,
-      languageCode,
-      requestedDimensions,
+      ...requestContext,
     }); // Movies are at depth 0 (root level)
 
     return HttpResponse.json({
@@ -50,10 +45,7 @@ export const listMoviesHandlers = [
       }
 
       // Find all movies that have this genre
-      const languageCode = getLanguageFromRequest(request.headers);
-      const requestedDimensions = getAvailabilityDimensionsFromRequest(
-        request.headers,
-      );
+      const requestContext = extractRequestContext(request.headers);
       const moviesWithGenre = airtableData.mediaObjects
         .filter(
           (obj) =>
@@ -68,10 +60,10 @@ export const listMoviesHandlers = [
           convertMediaObjectToGraphQL({
             airtableObj: movieObj,
             currentDepth: 0,
-            languageCode,
-            requestedDimensions,
+            ...requestContext,
           }),
-        ); // Movies are at depth 0 (root level)
+        ) // Movies are at depth 0 (root level)
+        .filter((movie) => movie !== null);
 
       return HttpResponse.json({
         data: {
@@ -105,10 +97,7 @@ export const listMoviesHandlers = [
       }
 
       // Find all movies that have this tag
-      const languageCode = getLanguageFromRequest(request.headers);
-      const requestedDimensions = getAvailabilityDimensionsFromRequest(
-        request.headers,
-      );
+      const requestContext = extractRequestContext(request.headers);
       const moviesWithTag = airtableData.mediaObjects
         .filter(
           (obj) =>
@@ -123,10 +112,10 @@ export const listMoviesHandlers = [
           convertMediaObjectToGraphQL({
             airtableObj: movieObj,
             currentDepth: 0,
-            languageCode,
-            requestedDimensions,
+            ...requestContext,
           }),
-        ); // Movies are at depth 0 (root level)
+        ) // Movies are at depth 0 (root level)
+        .filter((movie) => movie !== null);
 
       return HttpResponse.json({
         data: {
