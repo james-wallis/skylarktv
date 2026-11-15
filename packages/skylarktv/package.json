@@ -43,7 +43,7 @@
     "graphql-request": "6.1.0",
     "json-to-graphql-query": "2.3.0",
     "motion": "12.0.0-alpha.2",
-    "msw": "^2.10.3",
+    "msw": "2.10.3",
     "next": "15.5.18",
     "next-password-protect": "1.8.0",
     "next-plausible": "3.12.4",
