@@ -3,7 +3,13 @@ import { convertSetToGraphQL } from "./sets";
 import { getObjectsByType } from "./mediaObjects";
 import { AvailabilityDimensions } from "./availability";
 import { findChildObjects, isMediaObjectAvailable } from "./mediaObjectUtils";
-import { parseArticle, parseEpisode } from "./parseMediaObjects";
+import {
+  parseArticle,
+  parseBrand,
+  parseEpisode,
+  parseMovie,
+  parseSeason,
+} from "./parseMediaObjects";
 
 // Wes Anderson collection contains movies with time-limited availability
 const WES_ANDERSON_SET_ID = "recee5pYWoOelq5PB";
@@ -18,6 +24,7 @@ const HOTD_S2E1_ID = "recgGV0rP0yxow7GV"; // always available
 const HOTD_S2E2_ID = "recHotDS2E2Cruel0"; // active-next-sunday
 const HOTD_RECAP_ARTICLE_ID = "recqHgNdM9TIlSevG"; // active-until-next-sunday
 const HOTD_REVIEWS_ARTICLE_ID = "recmNbib5jHVgn6Hu"; // active-next-sunday
+const HOTD_BRAND_ID = "recexHwDtkWbI2LM8";
 
 const requestedDimensions: AvailabilityDimensions = {
   customerTypes: ["premium"],
@@ -192,6 +199,66 @@ describe("MSW mocks - time travel", () => {
       expect(publishDate.getTime()).toBeLessThanOrEqual(forward.getTime());
       expect(publishDate.getDay()).toBe(0); // Sunday
       expect(publishDate.getHours()).toBe(21);
+    });
+  });
+
+  describe("schedule status tags", () => {
+    type Parser = typeof parseBrand | typeof parseSeason | typeof parseEpisode;
+
+    const getStatusTagNames = (
+      objectId: string,
+      parser: Parser,
+      timeTravelDate: Date | null,
+    ) => {
+      const airtableObj = airtableData.mediaObjects.find(
+        ({ id }) => id === objectId,
+      );
+      if (!airtableObj) throw new Error(`${objectId} missing from mock data`);
+
+      const parsed = parser({
+        airtableObj,
+        requestedDimensions,
+        timeTravelDate,
+      });
+
+      return (parsed?.tags?.objects || [])
+        .filter((tag) => tag?.type === "SCHEDULE_STATUS")
+        .map((tag) => tag?.name);
+    };
+
+    it.each([
+      ["brand", HOTD_BRAND_ID, parseBrand],
+      ["season 2", HOTD_SEASON_2_ID, parseSeason],
+    ])(
+      "swaps the House of the Dragon %s tag from 'New episode Sunday' to 'New'",
+      (_, objectId, parser) => {
+        expect(getStatusTagNames(objectId, parser, null)).toEqual([
+          "New episode Sunday",
+        ]);
+        expect(getStatusTagNames(objectId, parser, getForward7Days())).toEqual([
+          "New",
+        ]);
+      },
+    );
+
+    it("tags S2E2 as 'New' when it becomes available", () => {
+      expect(
+        getStatusTagNames(HOTD_S2E2_ID, parseEpisode, getForward7Days()),
+      ).toEqual(["New"]);
+    });
+
+    it("parses the tag type from Airtable's array format", () => {
+      // Parasite is tagged "Winner" (SCHEDULE_STATUS)
+      const airtableObj = airtableData.mediaObjects.find(
+        ({ fields }) => fields.title === "Parasite",
+      );
+      if (!airtableObj) throw new Error("Parasite missing from mock data");
+
+      expect(
+        parseMovie({ airtableObj })?.tags?.objects?.find(
+          (tag) => tag?.name === "Winner",
+        )?.type,
+      ).toBe("SCHEDULE_STATUS");
     });
   });
 });
