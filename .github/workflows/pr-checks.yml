@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Lint, Prettier & Jest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v4.4.0
+      - uses: actions/setup-node@v4.4.0
         with:
-          node-version: 18
+          node-version: 18.20.8
           cache: yarn
       - run: yarn
       - run: yarn tsc:all
@@ -23,9 +23,9 @@ jobs:
       - run: yarn prettier:check
       - run: yarn test:ci
       - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v5.5.5
       - name: Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v1.9.1
         if: success() || failure()
         with:
           name: Frontend Unit Test Results
