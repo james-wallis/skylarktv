@@ -70,11 +70,11 @@ export const getEpisodeHandlers = [
     ),
 
   graphql.link(SAAS_API_ENDPOINT).query("LIST_EPISODES", ({ request }) => {
-    const { languageCode } = extractRequestContext(request.headers);
+    const requestContext = extractRequestContext(request.headers);
     const episodes = getObjectsByType({
       type: "episodes",
       depth: 0,
-      languageCode,
+      ...requestContext,
     });
 
     return createGraphQLListResponse(episodes, "listObjects");
