@@ -7,6 +7,7 @@ import {
   assertStringArray,
   assertSingleString,
   convertMediaObjectToGraphQL,
+  extractRequestContext,
   findObjectByUidOrExternalId,
 } from "../airtableData";
 
@@ -126,7 +127,8 @@ export const getPersonHandlers = [
   // Handle GET_PERSON_FOR_RELATED_CREDITS query
   graphql
     .link(SAAS_API_ENDPOINT)
-    .query("GET_PERSON_FOR_RELATED_CREDITS", ({ variables }) => {
+    .query("GET_PERSON_FOR_RELATED_CREDITS", ({ variables, request }) => {
+      const requestContext = extractRequestContext(request.headers);
       const person = airtableData.people?.find(
         (p) => p.id === variables.uid || p.id === variables.externalId,
       );
@@ -178,6 +180,7 @@ export const getPersonHandlers = [
               convertMediaObjectToGraphQL({
                 airtableObj: movieObj,
                 currentDepth: 0,
+                ...requestContext,
               }),
             )
             .filter(Boolean) || [];
@@ -196,6 +199,7 @@ export const getPersonHandlers = [
               convertMediaObjectToGraphQL({
                 airtableObj: episodeObj,
                 currentDepth: 0,
+                ...requestContext,
               }),
             )
             .filter(Boolean) || [];

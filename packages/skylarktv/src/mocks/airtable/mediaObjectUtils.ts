@@ -2,7 +2,12 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Record as AirtableRecord, FieldSet } from "airtable";
 import { airtableData, getMediaObjectByUidOrExternalId } from "./data";
-import { isObjectType } from "./utils";
+import { assertStringArray, isObjectType } from "./utils";
+import {
+  AvailabilityDimensions,
+  filterContentByAvailability,
+  hasDimensionsRequested,
+} from "./availability";
 import { MediaObjectParseOptions } from "./parseMediaObjects";
 import { convertMediaObjectToGraphQL } from "./mediaObjects";
 
@@ -46,6 +51,26 @@ export const findChildObjects = (
 
     return parent === parentId;
   });
+
+// Check a raw Airtable media object against the request's availability
+// dimensions and time travel date (mirrors the check in parseMediaObject)
+export const isMediaObjectAvailable = (
+  airtableObj: AirtableRecord<FieldSet>,
+  {
+    requestedDimensions,
+    timeTravelDate,
+  }: {
+    requestedDimensions?: AvailabilityDimensions;
+    timeTravelDate?: Date | null;
+  },
+): boolean =>
+  !hasDimensionsRequested(requestedDimensions) ||
+  filterContentByAvailability(
+    assertStringArray(airtableObj.fields.availability) || [],
+    requestedDimensions,
+    airtableData,
+    timeTravelDate,
+  );
 
 // Find objects by metadata field (genres, tags, etc.)
 export const findObjectsByMetadata = (

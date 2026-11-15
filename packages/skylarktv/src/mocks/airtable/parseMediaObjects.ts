@@ -15,6 +15,7 @@ import {
   filterContentByAvailability,
   AvailabilityDimensions,
   parseAvailability,
+  getDynamicPublishDate,
 } from "./availability";
 import {
   Credit,
@@ -467,7 +468,11 @@ export const parseArticle = (
     description: assertString(fields.description),
     body: assertString(fields.body),
     type: assertString(fields.type),
-    publish_date: assertString(fields.publish_date),
+    publish_date:
+      getDynamicPublishDate(
+        assertStringArray(fields.availability) || [],
+        airtableData,
+      ) || assertString(fields.publish_date),
     internal_title: assertString(fields.internal_title),
     images: { objects: images },
     availability: { objects: availabilityObjects },

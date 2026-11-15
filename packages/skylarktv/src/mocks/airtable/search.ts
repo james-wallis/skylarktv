@@ -11,6 +11,7 @@ import {
 import {
   filterContentByAvailability,
   AvailabilityDimensions,
+  getDynamicPublishDate,
 } from "./availability";
 
 // Search across all objects (media objects, articles, people)
@@ -129,7 +130,11 @@ export const searchAllObjects = (
         description: highlightSearchTerm(article.fields.description, query),
         body: highlightSearchTerm(article.fields.body, query),
         type: assertString(article.fields.type),
-        publish_date: assertString(article.fields.publish_date),
+        publish_date:
+          getDynamicPublishDate(
+            assertStringArray(article.fields.availability) || [],
+            airtableData,
+          ) || assertString(article.fields.publish_date),
         images: { objects: images },
       };
     });

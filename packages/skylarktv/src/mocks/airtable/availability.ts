@@ -103,6 +103,44 @@ const isAvailabilityTimeActive = (
   return true; // Fallback to available (shouldn't reach here)
 };
 
+// Whether any availability dimensions were sent with the request.
+// Availability (including time travel) is only applied when they are.
+export const hasDimensionsRequested = (
+  requestedDimensions?: AvailabilityDimensions,
+): requestedDimensions is AvailabilityDimensions =>
+  !!requestedDimensions &&
+  (requestedDimensions.customerTypes.length > 0 ||
+    requestedDimensions.deviceTypes.length > 0 ||
+    requestedDimensions.regions.length > 0);
+
+// Time-limited demo content (e.g. the House of the Dragon Episode 2 articles)
+// should look like it was published when it became available. Returns a
+// publish date that moves with the dynamic availability dates, or null to use
+// the date from the data.
+export const getDynamicPublishDate = (
+  availabilityIds: string[],
+  airtableData: Airtables,
+): string | null => {
+  const slugs = availabilityIds.map((id) =>
+    assertString(
+      airtableData.availability?.find((avail) => avail.id === id)?.fields.slug,
+    ),
+  );
+
+  if (slugs.includes("active-next-sunday")) {
+    return getNextSundayAt9PM().toISOString();
+  }
+
+  if (slugs.includes("active-until-next-sunday")) {
+    // "Now", rounded down to the hour so it doesn't change on every request
+    const now = new Date();
+    now.setMinutes(0, 0, 0);
+    return now.toISOString();
+  }
+
+  return null;
+};
+
 // Availability support functions
 export const checkAvailabilityMatch = (
   availabilityRecord: AirtableRecord<FieldSet>,

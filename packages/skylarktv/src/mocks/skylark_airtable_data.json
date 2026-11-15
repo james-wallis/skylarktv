@@ -6029,6 +6029,23 @@
           }
         },
         {
+          "id": "recHotDS2E2PtPT00",
+          "createdTime": "2026-11-15T12:00:00.000Z",
+          "fields": {
+            "title": "Episódio 2",
+            "object": ["recHotDS2E2Cruel0"],
+            "languages": ["recoNzbdGmRCXneKG"],
+            "title_short": "Episódio 2",
+            "release_date": "2024-06-23",
+            "Airtable ID": "recHotDS2E2PtPT00",
+            "language_code": ["pt-PT"],
+            "Translation Created": true
+          },
+          "_table": {
+            "name": "Media Content - Translations"
+          }
+        },
+        {
           "id": "recpTEkBzxiMaipHp",
           "createdTime": "2022-09-09T22:40:20.000Z",
           "fields": {
@@ -138659,6 +138676,52 @@
           "language": ["recdW4ANwDtnhaQn1"],
           "title": "A Son for a Son",
           "title_sort": "hotds02e1asonforason",
+          "languages (from Media Content - Translations)": ["pt-PT"],
+          "tmdb_id": "94997",
+          "audience_rating": 8,
+          "language_code": ["en-GB"]
+        },
+        "_table": {
+          "name": "Media Content"
+        }
+      },
+      {
+        "id": "recHotDS2E2Cruel0",
+        "createdTime": "2026-11-15T12:00:00.000Z",
+        "fields": {
+          "internal_title": "HotD S02E2 - Rhaenyra the Cruel",
+          "slug": "rhaenyra-the-cruel",
+          "title": "Rhaenyra the Cruel",
+          "title_short": "Rhaenyra the Cruel",
+          "title_sort": "hotds02e2rhaenyrathecruel",
+          "synopsis": "As King's Landing reels from a brutal act of revenge, Aegon demands retribution and the Small Council debates how far to go. At Dragonstone, Rhaenyra confronts Daemon over what was done in her name.",
+          "release_date": "2024-06-23",
+          "genres": [
+            "recJjCzOpNjLNPMY3",
+            "recju9eqHLzX5SeRz",
+            "recDreaNGE6JPqBRV"
+          ],
+          "credits": [
+            "recDkHG323KapS31u",
+            "recPKTLhg4HnYiqmI",
+            "recrDP3KnXEAxPmKo",
+            "recssvIMxEPOilxap",
+            "recKkzO8340gS7kFw",
+            "reck6IbEVonEOnQCu",
+            "recT40e2sHDeQ9ufB",
+            "rec8WBetT8wnaAazx",
+            "recF3OPAbotR7ZZ1m"
+          ],
+          "ratings": ["recY13IpjvRLRe1Vo"],
+          "images": ["recbUsBkxkFjVVcRO"],
+          "availability": ["recQzQ8ZUyh6VzVAw"],
+          "skylark_object_type": "Episode",
+          "season_number": 2,
+          "parent": ["recMv18rCOfpht8yA"],
+          "episode_number": 2,
+          "Media Content - Translations": ["recHotDS2E2PtPT00"],
+          "Airtable ID": "recHotDS2E2Cruel0",
+          "language": ["recdW4ANwDtnhaQn1"],
           "languages (from Media Content - Translations)": ["pt-PT"],
           "tmdb_id": "94997",
           "audience_rating": 8,

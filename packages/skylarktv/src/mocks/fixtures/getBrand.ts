@@ -9,6 +9,7 @@ import {
   findChildObjects,
   sortByProperty,
   findObjectByUidOrExternalId,
+  isMediaObjectAvailable,
 } from "../airtableData";
 import { parseBrand, parseSeason } from "../airtable/parseMediaObjects";
 
@@ -39,14 +40,14 @@ export const getBrandHandlers = [
             if (!season) return null;
 
             // Find episodes for each season using the parent field
-            const episodes = findChildObjects(seasonObj.id, "episode").map(
-              (ep) => ({
+            const episodes = findChildObjects(seasonObj.id, "episode")
+              .filter((ep) => isMediaObjectAvailable(ep, requestContext))
+              .map((ep) => ({
                 __typename: "Episode",
                 uid: ep.id,
                 slug: ep.fields.slug,
                 episode_number: assertNumber(ep.fields.episode_number),
-              }),
-            );
+              }));
 
             // Sort episodes by episode_number
             const sortedEpisodes = sortByProperty(
