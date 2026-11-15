@@ -125090,7 +125090,11 @@
           "season_number": 2,
           "parent": ["recexHwDtkWbI2LM8"],
           "Media Content - Translations": ["recW3oD9lcK9m9UM3"],
-          "tags": ["recxqJVh1c3TOoRxU"],
+          "tags": [
+            "recxqJVh1c3TOoRxU",
+            "recLv3JFK4wmUF0g4",
+            "recFcSj9aeyRsDM3y"
+          ],
           "Airtable ID": "recMv18rCOfpht8yA",
           "language": ["recdW4ANwDtnhaQn1"],
           "title": "House of the Dragon - Season 2",
@@ -138276,7 +138280,11 @@
           "skylark_object_type": "Brand",
           "synopsis": "The prequel series finds the Targaryen dynasty at the absolute apex of its power, with more than 15 dragons under their yoke. Most empires – real and imagined – crumble from such heights.\n\nIn the case of the Targaryens, their slow fall begins almost 193 years before the events of Game of Thrones, when King Viserys Targaryen breaks with a century of tradition by naming his daughter Rhaenyra heir to the Iron Throne.\n\nBut when Viserys later fathers a son, the court is shocked when Rhaenyra retains her status as his heir, and seeds of division sow friction across the realm.",
           "Media Content - Translations": ["recstusMoDldnf1PI"],
-          "tags": ["rec77oruhrH7a8C2r"],
+          "tags": [
+            "rec77oruhrH7a8C2r",
+            "recLv3JFK4wmUF0g4",
+            "recFcSj9aeyRsDM3y"
+          ],
           "Airtable ID": "recexHwDtkWbI2LM8",
           "language": ["recdW4ANwDtnhaQn1"],
           "call_to_actions": ["reciTm8blkU85lVQw"],
@@ -138725,7 +138733,8 @@
           "languages (from Media Content - Translations)": ["pt-PT"],
           "tmdb_id": "94997",
           "audience_rating": 8,
-          "language_code": ["en-GB"]
+          "language_code": ["en-GB"],
+          "tags": ["recFcSj9aeyRsDM3y"]
         },
         "_table": {
           "name": "Media Content"
@@ -236907,7 +236916,12 @@
           "type-reference": ["recb1HTGUE9JBaVF8"],
           "slug": "new-this-week",
           "type": ["SCHEDULE_STATUS"],
-          "availability": ["recQzQ8ZUyh6VzVAw"]
+          "availability": ["recQzQ8ZUyh6VzVAw"],
+          "Media Content": [
+            "recexHwDtkWbI2LM8",
+            "recMv18rCOfpht8yA",
+            "recHotDS2E2Cruel0"
+          ]
         },
         "_table": {
           "name": "tags"
@@ -236917,11 +236931,12 @@
         "id": "recLv3JFK4wmUF0g4",
         "createdTime": "2023-07-27T21:36:32.000Z",
         "fields": {
-          "name": "Upcoming",
+          "name": "New episode Sunday",
           "type-reference": ["recb1HTGUE9JBaVF8"],
           "slug": "upcoming-next-week",
           "type": ["SCHEDULE_STATUS"],
-          "availability": ["recX0Ztue3iBQR7rl"]
+          "availability": ["recX0Ztue3iBQR7rl"],
+          "Media Content": ["recexHwDtkWbI2LM8", "recMv18rCOfpht8yA"]
         },
         "_table": {
           "name": "tags"

@@ -128,7 +128,8 @@ export const parseTag = (
     uid: tagRecord.id,
     external_id: assertString(tagRecord.fields.external_id) || tagRecord.id,
     name: assertString(tagRecord.fields.name),
-    type: assertString(tagRecord.fields.type),
+    // Airtable stores the tag type as an array, e.g. ["SCHEDULE_STATUS"]
+    type: assertSingleString(tagRecord.fields.type),
   };
 };
 

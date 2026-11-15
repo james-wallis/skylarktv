@@ -16,6 +16,7 @@ import {
   AvailabilityDimensions,
   parseAvailability,
   getDynamicPublishDate,
+  hasDimensionsRequested,
 } from "./availability";
 import {
   Credit,
@@ -132,6 +133,22 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
     fields.tags,
     (tagId: string) => {
       const tag = getTagById(tagId);
+
+      // Tags have their own availability, e.g. "Upcoming" until next Sunday
+      // and "New" from next Sunday, so filter them like content
+      if (
+        tag &&
+        hasDimensionsRequested(requestedDimensions) &&
+        !filterContentByAvailability(
+          assertStringArray(tag.fields.availability) || [],
+          requestedDimensions,
+          airtableData,
+          timeTravelDate,
+        )
+      ) {
+        return null;
+      }
+
       return parseTag(tag);
     },
     currentDepth,
@@ -219,16 +236,7 @@ export const parseMediaObject = (options: MediaObjectParseOptions) => {
   // Process availability records if requested dimensions are provided
   let availabilityObjects: Availability[] = [];
 
-  // Check if any dimensions are actually requested
-  const hasDimensionsRequested =
-    requestedDimensions &&
-    ((requestedDimensions.customerTypes &&
-      requestedDimensions.customerTypes.length > 0) ||
-      (requestedDimensions.deviceTypes &&
-        requestedDimensions.deviceTypes.length > 0) ||
-      (requestedDimensions.regions && requestedDimensions.regions.length > 0));
-
-  if (hasDimensionsRequested) {
+  if (hasDimensionsRequested(requestedDimensions)) {
     const contentAvailabilityIds = assertStringArray(fields.availability) || [];
     const hasAccess = filterContentByAvailability(
       contentAvailabilityIds,
@@ -437,15 +445,7 @@ export const parseArticle = (
 
   // Process availability records if requested dimensions are provided
   let availabilityObjects: Availability[] = [];
-  const hasDimensionsRequested =
-    requestedDimensions &&
-    ((requestedDimensions.customerTypes &&
-      requestedDimensions.customerTypes.length > 0) ||
-      (requestedDimensions.deviceTypes &&
-        requestedDimensions.deviceTypes.length > 0) ||
-      (requestedDimensions.regions && requestedDimensions.regions.length > 0));
-
-  if (hasDimensionsRequested) {
+  if (hasDimensionsRequested(requestedDimensions)) {
     const contentAvailabilityIds = assertStringArray(fields.availability) || [];
     const tempAvailabilityObjects = contentAvailabilityIds
       .map((availId) => {
